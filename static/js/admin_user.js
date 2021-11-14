@@ -102,7 +102,7 @@ filter_create.addEventListener("click", (e) => {
             .then(data => {
                 console.log('NEW USER CREATED : ' + data);
                 item_error1[0].style.visibility = 'hidden'
-                item_error2[1].style.visibility = 'hidden'
+                item_error2[0].style.visibility = 'hidden'
                 if(data !== "OK"){
                     item_error1[0].style.visibility = 'visible'
                     if(data == "SAME USERNAME"){
@@ -223,8 +223,8 @@ for(let i = 0;i < update_btn.length;i++){
                 })
             }
             else if(!check_password_item(i)){
-                item_error2[i].style.visibility = 'visible'
-                item_error2[i].innerHTML = 'Şifre uygun değil'
+                item_error2[i+1].style.visibility = 'visible'
+                item_error2[i+1].innerHTML = 'Şifre uygun değil'
             }
         }
     })
