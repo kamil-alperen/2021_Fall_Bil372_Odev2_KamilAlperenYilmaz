@@ -153,7 +153,7 @@ input, button {
     cursor: pointer;
     
 }
-.label_item_username {
+.label_item_username, .label_item_password {
     position: absolute;
     bottom: 0;
     left: 50%;

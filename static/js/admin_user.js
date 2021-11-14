@@ -10,7 +10,8 @@ const update_btn = document.getElementsByClassName("update")
 const quit_btn = document.getElementsByClassName("quit")
 const delete_btn = document.getElementsByClassName("delete")
 const rows = document.getElementsByClassName("item")
-const item_error = document.getElementsByClassName("label_item_username")
+const item_error1 = document.getElementsByClassName("label_item_username")
+const item_error2 = document.getElementsByClassName("label_item_password")
 let current_page = 1
 let total_record = 0
 
@@ -42,9 +43,15 @@ function mandatory_item(j){
         item_username[j].setAttribute("style", "border-color:red")
         b = false
     }
+    else {
+        item_username[j].setAttribute("style", "border-color:black")
+    }
     if(item_password[j].value.length == 0){
         item_password[j].setAttribute("style", "border-color:red")
         b = false
+    }
+    else {
+        item_password[j].setAttribute("style", "border-color:black")
     }
     return b
 }
@@ -52,23 +59,34 @@ function reset_item(j){
     item_username[j].setAttribute("style", "border-color:black")
     item_password[j].setAttribute("style", "border-color:black")
 }
+function check_password_filter(){
+    let b1 = filter_password.value !== filter_password.value.toLowerCase()
+    let b2 = false
+    if(filter_password.value.match(/[A-Za-z]/g) !== null){
+        b2 = filter_password.value.match(/[A-Za-z]/g).length >= 8
+    }
+    let b3 = false
+    if(filter_password.value.match(/[A-Za-z0-9]/g) !== null){
+        b3 = filter_password.value.match(/[A-Za-z0-9]/g).length < filter_password.value.length
+    }
+    return b1 && b2 && b3
+}
+function check_password_item(i){
+    let b1 = item_password[i].value !== item_password[i].value.toLowerCase()
+    let b2 = false
+    if(item_password[i].value.match(/[A-Za-z]/g) !== null){
+        b2 = item_password[i].value.match(/[A-Za-z]/g).length >= 8
+    }
+    let b3 = false
+    if(item_password[i].value.match(/[A-Za-z0-9]/g) !== null){
+        b3 = item_password[i].value.match(/[A-Za-z0-9]/g).length < item_password[i].value.length
+    }
+    return b1 && b2 && b3
+}
 filter_create.addEventListener("click", (e) => {
     if(mandatory_filter()){
         reset_filter()
-        let b1 = filter_password.value !== filter_password.value.toLowerCase()
-        let b2 = false
-        if(filter_password.value.match(/[A-Za-z]/g) !== null){
-            b2 = filter_password.value.match(/[A-Za-z]/g).length >= 8
-        }
-        let b3 = false
-        if(filter_password.value.match(/[A-Za-z0-9]/g) !== null){
-            b3 = filter_password.value.match(/[A-Za-z0-9]/g).length < filter_password.value.length
-        }
-        console.log(b1);
-        console.log(b2);
-        console.log(b3);
-        if(b1 && b2 && b3){
-            
+        if(check_password_filter()){
             let send_data = {
                 'Type' : 'CREATE',
                 'Kullanıcı Adı' : filter_username.value,
@@ -83,25 +101,30 @@ filter_create.addEventListener("click", (e) => {
             }).then(response => response.json())
             .then(data => {
                 console.log('NEW USER CREATED : ' + data);
+                item_error1[0].style.visibility = 'hidden'
+                item_error2[1].style.visibility = 'hidden'
                 if(data !== "OK"){
-                    item_error[0].style.visibility = 'visible'
+                    item_error1[0].style.visibility = 'visible'
                     if(data == "SAME USERNAME"){
                         console.log('Başka Kullanıcı Adı ile aynı');
-                        item_error[0].innerHTML = 'Başka Kullanıcı Adı ile aynı'
+                        item_error1[0].innerHTML = 'Başka Kullanıcı Adı ile aynı'
                     }
                     else if(data == "NO USERNAME"){
                         console.log('Böyle bir kullanıcı adı yok');
-                        item_error[0].innerHTML = 'Böyle bir kullanıcı adı yok'
+                        item_error1[0].innerHTML = 'Böyle bir kullanıcı adı yok'
                     }
                 }
                 else {
                     console.log('hidden');
-                    item_error[0].style.visibility = 'hidden'
                     filter_username.value = ''
                     filter_password.value = ''
                     list_from_zero(1)
                 }
             })
+        }
+        else {
+            item_error2[0].style.visibility = 'visible'
+            item_error2[0].innerHTML = 'Şifre uygun değil'
         }
     }
 })
@@ -112,7 +135,8 @@ filter_list.addEventListener("click", (e) => {
 })
 function list_from_zero(page){
     reset_filter()
-    item_error[0].style.visibility = 'hidden'
+    item_error1[0].style.visibility = 'hidden'
+    item_error2[0].style.visibility = 'hidden'
     for(let i = 0;i < rows.length;i++){
         rows[i].style.visibility = 'hidden'
     }
@@ -159,8 +183,7 @@ for(let i = 0;i < update_btn.length;i++){
             item_password[i].setAttribute('style','pointer-events:all')
         }
         else {
-            if(mandatory_item(i)){
-                reset_item(i)
+            if(mandatory_item(i) && check_password_item(i)){
                 send_data = {
                     'Satır' : i,
                     'Eski Adı' : prev_item_username[i],
@@ -175,21 +198,21 @@ for(let i = 0;i < update_btn.length;i++){
                     body: JSON.stringify(send_data)
                 }).then(response => response.json())
                 .then(data => {
+                    item_error1[i+1].style.visibility = 'hidden'
+                    item_error2[i+1].style.visibility = 'hidden'
                     console.log('USER UPDATED : ');
-                    console.log(data);
                     if(data == 'SAME USERNAME'){
                         console.log('same username');
-                        item_error[i+1].style.visibility = 'visible'
-                        item_error[i+1].innerHTML = 'Başka Kullanıcı Adı ile aynı'
+                        item_error1[i+1].style.visibility = 'visible'
+                        item_error1[i+1].innerHTML = 'Başka Kullanıcı Adı ile aynı'
                     }
                     else if(data == "NO USERNAME"){
                         console.log('no username');
-                        item_error[i+1].style.visibility = 'visible'
-                        item_error[i+1].innerHTML = 'Böyle bir Kullanıcı Adı yok'
+                        item_error1[i+1].style.visibility = 'visible'
+                        item_error1[i+1].innerHTML = 'Böyle bir Kullanıcı Adı yok'
                     }
                     else {
                         console.log('hidden');
-                        item_error[i+1].style.visibility = 'hidden'
                         update_btn[i].value = 'Güncelle'
                         quit_btn[i].style.opacity = '0.5'
                         item_username[i].setAttribute('style','pointer-events:none')
@@ -198,6 +221,10 @@ for(let i = 0;i < update_btn.length;i++){
                         prev_item_password[i] = item_password[i].value
                     }
                 })
+            }
+            else if(!check_password_item(i)){
+                item_error2[i].style.visibility = 'visible'
+                item_error2[i].innerHTML = 'Şifre uygun değil'
             }
         }
     })
@@ -210,7 +237,8 @@ for(let i = 0;i < update_btn.length;i++){
             item_password[i].setAttribute('style','pointer-events:none')
             update_btn[i].value = 'Güncelle'
             quit_btn[i].style.opacity = '0.5'
-            item_error[i+1].style.visibility = 'hidden'
+            item_error1[i+1].style.visibility = 'hidden'
+            item_error2[i+1].style.visibility = 'hidden'
         }
     })
     delete_btn[i].addEventListener("click", (e) => {
@@ -218,6 +246,8 @@ for(let i = 0;i < update_btn.length;i++){
         send_data = {
             'Kullanıcı Adı' : prev_item_username[i]
         }
+        item_error1[i+1].style.visibility = 'hidden'
+        item_error2[i+1].style.visibility = 'hidden'
         fetch('./user', {
             method : 'DELETE',
             headers: {
