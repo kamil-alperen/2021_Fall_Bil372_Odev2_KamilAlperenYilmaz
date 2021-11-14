@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/personel_output.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="filters">
+        <div class="alanID">
+            <input type="number" name="alanID" placeholder="Alan ID" id="filter_alanID">
+            <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+        </div>
+        <div class="sinifID">
+            <input type="number" name="sinifID" placeholder="Sınıf ID" id="filter_sinifID">
+            <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+        </div>
+        <div class="ciktiID">
+            <input type="number" name="ciktiID" placeholder="Çıktı ID" id="filter_ciktiID">
+            <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+        </div>
+        <div class="ciktiadi">
+            <input type="text" name="ciktiadi" placeholder="Çıktı Adı" id="filter_ciktiadi">
+        </div>
+        <div class="button1">
+            <input type="button" value="Çıktı Oluştur" class="button" id="filter_create" style="color:white;background-color: green;">
+        </div>
+        <div class="button2">
+            <input type="button" value="Çıktı Listele" class="button" id="filter_list" style="color:white;background-color: blue;">
+        </div>
+    </div>
+    <div class="list">
+        <div class="title">
+            <div class="text">ÇIKTI TABLOSU</div>
+        </div>
+        <div class="labels">
+            <div class="label1">ALAN ID</div>
+            <div class="label2">SINIF ID</div>
+            <div class="label3">ÇIKTI ID</div>
+            <div class="label4">ÇIKTI ADI</div>
+            <div class="label5">GÜNCELLE-VAZGEÇ</div>
+            <div class="label6">SİL</div>
+        </div>
+        <div class="item1 item">
+            <div class="alanID">
+                <input type="number" name="alanID" class="item_alanID">
+                <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+            </div>
+            <div class="sinifID">
+                <input type="number" name="sinifID" class="item_sinifID">
+                <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+            </div>
+            <div class="ciktiID">
+                <input type="number" name="ciktiID" class="item_ciktiID">
+                <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+            </div>
+            <div class="ciktiadi">
+                <input type="text" name="ciktiadi" class="item_ciktiadi">
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item2 item">
+            <div class="alanID">
+                <input type="number" name="alanID" class="item_alanID">
+                <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+            </div>
+            <div class="sinifID">
+                <input type="number" name="sinifID" class="item_sinifID">
+                <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+            </div>
+            <div class="ciktiID">
+                <input type="number" name="ciktiID" class="item_ciktiID">
+                <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+            </div>
+            <div class="ciktiadi">
+                <input type="text" name="ciktiadi" class="item_ciktiadi">
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item3 item">
+            <div class="alanID">
+                <input type="number" name="alanID" class="item_alanID">
+                <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+            </div>
+            <div class="sinifID">
+                <input type="number" name="sinifID" class="item_sinifID">
+                <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+            </div>
+            <div class="ciktiID">
+                <input type="number" name="ciktiID" class="item_ciktiID">
+                <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+            </div>
+            <div class="ciktiadi">
+                <input type="text" name="ciktiadi" class="item_ciktiadi">
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item4 item">
+            <div class="alanID">
+                <input type="number" name="alanID" class="item_alanID">
+                <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+            </div>
+            <div class="sinifID">
+                <input type="number" name="sinifID" class="item_sinifID">
+                <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+            </div>
+            <div class="ciktiID">
+                <input type="number" name="ciktiID" class="item_ciktiID">
+                <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+            </div>
+            <div class="ciktiadi">
+                <input type="text" name="ciktiadi" class="item_ciktiadi">
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item5 item">
+            <div class="alanID">
+                <input type="number" name="alanID" class="item_alanID">
+                <label for="alanID" class="label_item_alanID" style="color: black;">Bu Alan ID yok</label>
+            </div>
+            <div class="sinifID">
+                <input type="number" name="sinifID" class="item_sinifID">
+                <label for="alanID" class="label_item_sinifID" style="color: black;">Bu Sınıf ID yok</label>
+            </div>
+            <div class="ciktiID">
+                <input type="number" name="ciktiID" class="item_ciktiID">
+                <label for="alanID" class="label_item_ciktiID" style="color: black;">AlanID + SınıfID + ÇıktıID var</label>
+            </div>
+            <div class="ciktiadi">
+                <input type="text" name="ciktiadi" class="item_ciktiadi">
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="pagination">
+            <div class="backpage">
+                <a href="./"><input type="button" value="Anasayfaya git"></a>
+            </div>
+            <div class="previous">
+                <button id="prev_btn"><<</button>
+            </div>
+            <div class="next">
+                <button id="next_btn">>></button>
+            </div>
+        </div>
+    </div>
+    <script src="../static/js/personel_output.js"></script>
+</body>
+</html>

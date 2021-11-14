@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/personel_class.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="filters">
+        <div class="sınıfID">
+            <input type="number" name="sınıfID" placeholder="Sınıf ID" id="filter_sınıfID">
+            <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+        </div>
+        <div class="Sınıfadi">
+            <input type="text" name="Sınıfadi" placeholder="Sınıf Adı" id="filter_Sınıfadi">
+            <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+        </div>
+        <div class="sınıftipi">
+            <select name="sınıftipi" id="filter_sınıftipi">
+                <option value="0">0 (Müdahale)</option>
+                <option value="1">1 (Çıktı)</option>
+                <option value="2">2 (Hepsi)</option>
+            </select>
+            <label for="sınıftipi" class="label_item_sınıftipi" style="color: black;bottom: 20%;">0 veya 1 olmalı</label>
+        </div>
+        <div class="button1">
+            <input type="button" value="Sınıf Oluştur" class="button" id="filter_create" style="color:white;background-color: green;">
+        </div>
+        <div class="button2">
+            <input type="button" value="Sınıf Listele" class="button" id="filter_list" style="color:white;background-color: blue;">
+        </div>
+    </div>
+    <div class="list">
+        <div class="title">
+            <div class="text">SINIFLAR TABLOSU</div>
+        </div>
+        <div class="labels">
+            <div class="label1">SINIF ID</div>
+            <div class="label2">SINIF ADI</div>
+            <div class="label3">SINIF TİPİ</div>
+            <div class="label4">GÜNCELLE-VAZGEÇ</div>
+            <div class="label5">SİL</div>
+        </div>
+        <div class="item1 item">
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" class="item_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+            </div>
+            <div class="Sınıfadi">
+                <input type="text" name="Sınıfadi" class="item_Sınıfadi">
+                <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+            </div>
+            <div class="sınıftipi">
+                <select name="sınıftipi" class="item_sınıftipi">
+                    <option value="0">0 (Müdahale)</option>
+                    <option value="1">1 (Çıktı)</option>
+                </select>
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item2 item">
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" class="item_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+            </div>
+            <div class="Sınıfadi">
+                <input type="text" name="Sınıfadi" class="item_Sınıfadi">
+                <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+            </div>
+            <div class="sınıftipi">
+                <select name="sınıftipi" class="item_sınıftipi">
+                    <option value="0">0 (Müdahale)</option>
+                    <option value="1">1 (Çıktı)</option>
+                </select>
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item3 item">
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" class="item_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+            </div>
+            <div class="Sınıfadi">
+                <input type="text" name="Sınıfadi" class="item_Sınıfadi">
+                <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+            </div>
+            <div class="sınıftipi">
+                <select name="sınıftipi" class="item_sınıftipi">
+                    <option value="0">0 (Müdahale)</option>
+                    <option value="1">1 (Çıktı)</option>
+                </select>
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item4 item">
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" class="item_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+            </div>
+            <div class="Sınıfadi">
+                <input type="text" name="Sınıfadi" class="item_Sınıfadi">
+                <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+            </div>
+            <div class="sınıftipi">
+                <select name="sınıftipi" class="item_sınıftipi">
+                    <option value="0">0 (Müdahale)</option>
+                    <option value="1">1 (Çıktı)</option>
+                </select>
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="item5 item">
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" class="item_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;bottom: 20%;">Bu Sınıf ID var</label>
+            </div>
+            <div class="Sınıfadi">
+                <input type="text" name="Sınıfadi" class="item_Sınıfadi">
+                <label for="Sınıfadi" class="label_item_Sınıfadi" style="color: black;bottom: 20%;">Bu Sınıf Adı var</label>
+            </div>
+            <div class="sınıftipi">
+                <select name="sınıftipi" class="item_sınıftipi">
+                    <option value="0">0 (Müdahale)</option>
+                    <option value="1">1 (Çıktı)</option>
+                </select>
+            </div>
+            <div class="button1">
+                <input type="button" value="Güncelle" class="button update">
+                <button class="quit">Vazgeç</button>
+            </div>
+            <div class="button2">
+                <input type="button" value="Sil" class="button delete">
+            </div>
+        </div>
+        <div class="pagination">
+            <div class="backpage">
+                <a href="./"><input type="button" value="Anasayfaya git"></a>
+            </div>
+            <div class="previous">
+                <button id="prev_btn"><<</button>
+            </div>
+            <div class="next">
+                <button id="next_btn">>></button>
+            </div>
+        </div>
+    </div>
+    <script src="../static/js/personel_class.js"></script>
+</body>
+</html>
