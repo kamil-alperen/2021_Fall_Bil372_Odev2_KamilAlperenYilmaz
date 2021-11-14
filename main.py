@@ -51,8 +51,8 @@ class Personel(db.Model):
     İlKodu = db.Column(db.String(15), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     PostaKodu = db.Column(db.Integer, nullable=False)
-    ÜstKullanıcıAdı = db.Column(db.String(30), nullable=False)
-    ÇalıştığıBirimKodu = db.Column(db.String(15), nullable=True)
+    ÜstKullanıcıAdı = db.Column(db.String(30), nullable=True)
+    ÇalıştığıBirimKodu = db.Column(db.String(15), nullable=False)
 
 class İl(db.Model):
     __tablename__ = "İl"
@@ -622,7 +622,7 @@ class Unit(Resource):
                 return "NO USTBIRIMKODU"
             elif(db.session.query(İlçe).filter(İlçe.İlKodu==infos['İlKodu'], İlçe.İlçeKodu==infos['İlçeKodu']).count()==0):
                 return "NO ILKODU-ILCEKODU"
-            elif(db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['BirimMüdürKullanıcıAdı']).count()==0):
+            elif(infos['BirimMüdürKullanıcıAdı'] != 'NULL' and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['BirimMüdürKullanıcıAdı']).count()==0):
                 return "NO BIRIMMUDURKULLANICIADI"
             else:
                 new_user = Birim(
@@ -687,7 +687,7 @@ class Unit(Resource):
             return "NO USTBIRIMKODU"
         elif(db.session.query(İlçe).filter(İlçe.İlKodu==infos['İlKodu'], İlçe.İlçeKodu==infos['İlçeKodu']).count()==0):
             return "NO ILKODU-ILCEKODU"
-        elif(db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['BirimMüdürKullanıcıAdı']).count()==0):
+        elif(infos['BirimMüdürKullanıcıAdı'] != 'NULL' and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['BirimMüdürKullanıcıAdı']).count()==0):
             return "NO BIRIMMUDURKULLANICIADI"
         else:
             birim = Birim.query.filter_by(BirimKodu=infos['EskiBirimKodu']).first()
