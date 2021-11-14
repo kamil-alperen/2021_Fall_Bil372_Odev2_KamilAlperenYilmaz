@@ -8,8 +8,19 @@ from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:kamil1789@localhost/COMPANY'
+
+ENV = 'prod'
+
+if(ENV == 'dev'):
+    app.debug = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:kamil1789@localhost/COMPANY'
+else:
+    app.debug = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://owirdaelqqvcat:e813c0f8f0ce7de03b7e446085f29d2b81c4e75b22799c8ad7aef66640b43beb@ec2-34-195-233-155.compute-1.amazonaws.com:5432/d5ochgc7du2jfp'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
 app.config['SECRET_KEY'] = 'thisissecret'
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -1264,4 +1275,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
