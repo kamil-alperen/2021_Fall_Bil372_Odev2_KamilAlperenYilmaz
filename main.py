@@ -445,6 +445,8 @@ class Employee(Resource):
             elif(db.session.query(Birim).filter(Birim.BirimKodu==infos['ÇalıştığıBirimKodu']).count() == 0):
                 return "NO CALISTIGIBIRIMKODU"
             else:
+                if(infos['ÜstKullanıcıAdı'] == ''):
+                    infos['ÜstKullanıcıAdı'] = None
                 new_user = Personel(
                     KullanıcıAdı=infos['KullanıcıAdı'],
                     Email=infos['Email'],
@@ -529,6 +531,8 @@ class Employee(Resource):
         elif(db.session.query(Birim).filter(Birim.BirimKodu==infos['ÇalıştığıBirimKodu']).count() == 0):
             return "NO CALISTIGIBIRIMKODU"
         else:
+            if(infos['ÜstKullanıcıAdı'] == ''):
+                infos['ÜstKullanıcıAdı'] = None
             person = Personel.query.filter_by(KullanıcıAdı=infos['Eski Adı']).first()
             person.KullanıcıAdı = infos['KullanıcıAdı']
             person.Email=infos['Email']
