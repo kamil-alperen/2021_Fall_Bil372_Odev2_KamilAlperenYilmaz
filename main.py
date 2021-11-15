@@ -14,7 +14,7 @@ key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
 kalıcı_birim = "Yönetim"
-ENV = 'prod'
+ENV = 'dev'
 
 if(ENV == 'dev'):
     app.debug = True
