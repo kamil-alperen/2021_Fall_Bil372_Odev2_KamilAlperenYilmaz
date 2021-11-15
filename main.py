@@ -13,7 +13,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-kalıcı_birim = "Yönetim"
 ENV = 'prod'
 
 if(ENV == 'dev'):
@@ -72,7 +71,6 @@ class Personel(db.Model):
     ÇalıştığıBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=False)
     üst_kullanıcı_adı = db.relationship('Personel', remote_side=[KullanıcıAdı], uselist=False)
     kullanıcı_ = db.relationship('Kullanıcı', backref='personel', lazy=True, uselist=False)
-    birim_müdürü = db.relationship('Birim', primaryjoin="Personel.KullanıcıAdı==Birim.BirimMüdürKullanıcıAdı")
     __table_args__ = (db.ForeignKeyConstraint([İlKodu, İlçeKodu],
                                               [İlçe.İlKodu, İlçe.İlçeKodu]),
                       {})
@@ -88,14 +86,13 @@ class Birim(db.Model):
     __tablename__ = "Birim"
     BirimKodu = db.Column(db.Integer, primary_key=True)
     BirimAdı = db.Column(db.String(30), nullable=False)
-    ÜstBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=True)
+    ÜstBirimKodu = db.Column(db.Integer, nullable=False)
     BulunduğuAdres = db.Column(db.String(100), nullable=False)
     İlKodu = db.Column(db.String(15), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     PostaKodu = db.Column(db.Integer, nullable=False)
-    BirimMüdürKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), nullable=True)
+    BirimMüdürKullanıcıAdı = db.Column(db.String(30), nullable=False)
     birim_personeller = db.relationship('Personel', primaryjoin="Personel.ÇalıştığıBirimKodu==Birim.BirimKodu")
-    üst_birim_kodu = db.relationship('Birim', remote_side=[BirimKodu], uselist=False)
     birim_eşleşme = db.relationship('ProblemBirim', backref='birim', lazy=True)
     __table_args__ = (db.ForeignKeyConstraint([İlKodu, İlçeKodu],
                                               [İlçe.İlKodu, İlçe.İlçeKodu]),
@@ -761,7 +758,6 @@ class Unit(Resource):
             birim = Birim.query.filter_by(BirimKodu=infos['EskiBirimKodu']).first()
             birim.BirimKodu = infos['BirimKodu']
             birim.BirimAdı=infos['BirimAdı']
-            kalıcı_birim = infos['BirimAdı']
             birim.ÜstBirimKodu=infos['ÜstBirimKodu']
             birim.BulunduğuAdres=infos['BulunduğuAdres']
             birim.İlKodu=infos['İlKodu']
@@ -773,9 +769,8 @@ class Unit(Resource):
     def delete(self):
         infos = request.json
         person = Birim.query.filter_by(BirimKodu=infos['BirimKodu'])
-        if(person.BirimAdı != kalıcı_birim):
-            person.delete()
-            db.session.commit()
+        person.delete()
+        db.session.commit()
         return "OK"
 
 api.add_resource(Unit,'/admin/unit')
