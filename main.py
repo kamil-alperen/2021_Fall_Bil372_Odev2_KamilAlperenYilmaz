@@ -13,7 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-
+kalıcı_birim = "Yönetim"
 ENV = 'prod'
 
 if(ENV == 'dev'):
@@ -757,6 +757,7 @@ class Unit(Resource):
             birim = Birim.query.filter_by(BirimKodu=infos['EskiBirimKodu']).first()
             birim.BirimKodu = infos['BirimKodu']
             birim.BirimAdı=infos['BirimAdı']
+            kalıcı_birim = infos['BirimAdı']
             birim.ÜstBirimKodu=infos['ÜstBirimKodu']
             birim.BulunduğuAdres=infos['BulunduğuAdres']
             birim.İlKodu=infos['İlKodu']
@@ -768,8 +769,9 @@ class Unit(Resource):
     def delete(self):
         infos = request.json
         person = Birim.query.filter_by(BirimKodu=infos['BirimKodu'])
-        person.delete()
-        db.session.commit()
+        if(person.BirimAdı != kalıcı_birim):
+            person.delete()
+            db.session.commit()
         return "OK"
 
 api.add_resource(Unit,'/admin/unit')
