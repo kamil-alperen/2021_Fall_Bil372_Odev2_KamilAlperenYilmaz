@@ -13,7 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-ENV = 'prod'
+ENV = 'dev'
 
 if(ENV == 'dev'):
     app.debug = True
@@ -36,7 +36,7 @@ system_admin_name = "SystemAdmin"
 class Kullanıcı(UserMixin, db.Model):
     __tablename__ = "Kullanıcı"
     KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), primary_key=True)
-    Şifre = db.Column(db.String(30), nullable=False)
+    Şifre = db.Column(db.String(500), nullable=False)
     def get_id(self):
         try:
             return self.KullanıcıAdı
@@ -365,9 +365,7 @@ class User(Resource):
             if(db.session.query(Personel).filter_by(KullanıcıAdı=infos['Kullanıcı Adı']).count() == 0):
                 return "NO USERNAME"
             elif(db.session.query(Kullanıcı).filter_by(KullanıcıAdı=infos['Kullanıcı Adı']).count() == 0):
-                password = infos['Şifre']
-                encPassword = fernet.encrypt(password.encode())
-                new_user = Kullanıcı(KullanıcıAdı=infos['Kullanıcı Adı'], Şifre=encPassword)
+                new_user = Kullanıcı(KullanıcıAdı=infos['Kullanıcı Adı'], Şifre=infos['Şifre'])
                 db.session.add(new_user)
                 db.session.commit()
                 return "OK"
@@ -381,7 +379,7 @@ class User(Resource):
             if(username != ''):
                 user_list = user_list.filter(Kullanıcı.KullanıcıAdı==username)
             if(password != ''):
-                user_list = user_list.filter(Kullanıcı.Şifre==fernet.decrypt(password).decode())
+                user_list = user_list.filter(Kullanıcı.Şifre==password)
             count = 0
             send_users = []
             for the_user in user_list[::-1]:
@@ -405,13 +403,11 @@ class User(Resource):
                 return "NO USERNAME" # there is not such a person
         else:
             global system_admin_name
-            password = infos['Şifre']
-            encPassword = fernet.encrypt(password.encode())
             user = Kullanıcı.query.filter_by(KullanıcıAdı=infos['Eski Adı']).first()
             if(infos['Eski Adı'] == system_admin_name):
                 system_admin_name = infos['Kullanıcı Adı']
             user.KullanıcıAdı = infos['Kullanıcı Adı']
-            user.Şifre = encPassword
+            user.Şifre = infos['Şifre']
             db.session.commit()
             return "OK"
     def delete(self):
