@@ -4,12 +4,17 @@ from flask_login.utils import logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource, Api
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
+from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from datetime import datetime
+from cryptography.fernet import Fernet
+from sqlalchemy.ext.hybrid import hybrid_property
 
+key = Fernet.generate_key()
+fernet = Fernet(key) 
 app = Flask(__name__)
 
-ENV = 'prod'
+ENV = 'dev'
 
 if(ENV == 'dev'):
     app.debug = True
@@ -31,13 +36,25 @@ system_admin_name = "SystemAdmin"
 
 class Kullanıcı(UserMixin, db.Model):
     __tablename__ = "Kullanıcı"
-    KullanıcıAdı = db.Column(db.String(30), primary_key=True)
+    KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), primary_key=True)
     Şifre = db.Column(db.String(30), nullable=False)
     def get_id(self):
         try:
             return self.KullanıcıAdı
         except AttributeError:
             raise NotImplementedError('No `id` attribute - override `get_id`')
+
+class İlçe(db.Model):
+    __tablename__ = "İlçe"
+    İlKodu = db.Column(db.String(15), db.ForeignKey('İl.İlKodu'), nullable=False)
+    İlçeKodu = db.Column(db.String(15), nullable=False)
+    İlçeAdı = db.Column(db.String(30), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('İlKodu', 'İlçeKodu'),
+    )
+    il_ilçe_personeller = db.relationship('Personel', backref='İlçe', lazy=True)
+    ilçe_birimler = db.relationship('Birim', backref='ilçe', lazy=True)
+
 
 class Personel(db.Model):
     __tablename__ = "Personel"
@@ -51,33 +68,38 @@ class Personel(db.Model):
     İlKodu = db.Column(db.String(15), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     PostaKodu = db.Column(db.Integer, nullable=False)
-    ÜstKullanıcıAdı = db.Column(db.String(30), nullable=True)
-    ÇalıştığıBirimKodu = db.Column(db.String(15), nullable=False)
+    ÜstKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), nullable=True)
+    ÇalıştığıBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=False)
+    üst_kullanıcı_adı = db.relationship('Personel', remote_side=[KullanıcıAdı], uselist=False)
+    kullanıcı_ = db.relationship('Kullanıcı', backref='personel', lazy=True, uselist=False)
+    birim_müdürü = db.relationship('Birim', primaryjoin="Personel.KullanıcıAdı==Birim.BirimMüdürKullanıcıAdı")
+    __table_args__ = (db.ForeignKeyConstraint([İlKodu, İlçeKodu],
+                                              [İlçe.İlKodu, İlçe.İlçeKodu]),
+                      {})
 
 class İl(db.Model):
     __tablename__ = "İl"
     İlKodu = db.Column(db.String(15), primary_key=True)
     İlAdı = db.Column(db.String(30), nullable=False)
+    İlçeler = db.relationship('İlçe', backref='il', lazy=True)
 
-class İlçe(db.Model):
-    __tablename__ = "İlçe"
-    İlKodu = db.Column(db.String(15), nullable=False)
-    İlçeKodu = db.Column(db.String(15), nullable=False)
-    İlçeAdı = db.Column(db.String(30), nullable=False)
-    __table_args__ = (
-        PrimaryKeyConstraint('İlKodu', 'İlçeKodu'),
-    )
 
 class Birim(db.Model):
     __tablename__ = "Birim"
-    BirimKodu = db.Column(db.String(15), primary_key=True)
+    BirimKodu = db.Column(db.Integer, primary_key=True)
     BirimAdı = db.Column(db.String(30), nullable=False)
-    ÜstBirimKodu = db.Column(db.String(15), nullable=False)
+    ÜstBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=True)
     BulunduğuAdres = db.Column(db.String(100), nullable=False)
     İlKodu = db.Column(db.String(15), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     PostaKodu = db.Column(db.Integer, nullable=False)
-    BirimMüdürKullanıcıAdı = db.Column(db.String(30), nullable=False)
+    BirimMüdürKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), nullable=True)
+    birim_personeller = db.relationship('Personel', primaryjoin="Personel.ÇalıştığıBirimKodu==Birim.BirimKodu")
+    üst_birim_kodu = db.relationship('Birim', remote_side=[BirimKodu], uselist=False)
+    birim_eşleşme = db.relationship('ProblemBirim', backref='birim', lazy=True)
+    __table_args__ = (db.ForeignKeyConstraint([İlKodu, İlçeKodu],
+                                              [İlçe.İlKodu, İlçe.İlçeKodu]),
+                      {})
 
 class Problem(db.Model):
     __tablename__ = "Problem"
@@ -87,23 +109,28 @@ class Problem(db.Model):
     ProblemiTanımlayıcıSoyadı = db.Column(db.String(20), nullable=False)
     ProblemiTanımlayanTCnoPasaportno = db.Column(db.String(30), nullable=False)
     HedeflenenAmaçTanımı = db.Column(db.String(50), nullable=False)
+    problem_eşleşme = db.relationship('ProblemBirim', backref='problem', lazy=True)
 
 class Alan(db.Model):
     __tablename__ = "Alan"
     AlanID = db.Column(db.Integer, primary_key=True)
     AlanAdı = db.Column(db.String(30), nullable=False)
     AlanTipi = db.Column(db.Boolean, nullable=False)
+    alan_müdahaleler = db.relationship('Müdahale', backref='alan', lazy=True)
+    alan_çıktı = db.relationship('Çıktı', backref='alan', lazy=True)
 
 class Sınıf(db.Model):
     __tablename__ = "Sınıf"
     SınıfID = db.Column(db.Integer, primary_key=True)
     SınıfAdı = db.Column(db.String(30), nullable=False)
     SınıfTipi = db.Column(db.Boolean, nullable=False)
+    sınıf_müdahaleler = db.relationship('Müdahale', backref='sınıf', lazy=True)
+    sınıf_çıktı = db.relationship('Çıktı', backref='sınıf', lazy=True)
 
 class Müdahale(db.Model):
     __tablename__ = "Müdahale"
-    AlanID = db.Column(db.Integer, nullable=False)
-    SınıfID = db.Column(db.Integer, nullable=False)
+    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID'), nullable=False)
+    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID'), nullable=False)
     MüdahaleID = db.Column(db.Integer, nullable=False)
     MüdahaleAdı = db.Column(db.String(30), nullable=False)
     __table_args__ = (
@@ -128,8 +155,8 @@ class MüdahaleDetay(db.Model):
 
 class Çıktı(db.Model):
     __tablename__ = "Çıktı"
-    AlanID = db.Column(db.Integer, nullable=False)
-    SınıfID = db.Column(db.Integer, nullable=False)
+    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID'), nullable=False)
+    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID'), nullable=False)
     ÇıktıID = db.Column(db.Integer, nullable=False)
     ÇıktıAdı = db.Column(db.String(30), nullable=False)
     __table_args__ = (
@@ -154,8 +181,8 @@ class ÇıktıDetay(db.Model):
 
 class ProblemBirim(db.Model):
     __tablename__ = "ProblemBirim"
-    ProblemID = db.Column(db.Integer, nullable=False)
-    BirimID = db.Column(db.Integer, nullable=False)
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID'), nullable=False)
+    BirimID = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=False)
     EşleşmeTarihi = db.Column(db.DateTime, nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('ProblemID', 'BirimID'),
@@ -165,6 +192,8 @@ class ProblemBirim(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return Kullanıcı.query.get(user_id)
+
+Müdür = False
 
 @app.route('/', methods=["GET","POST"])
 def login():
@@ -179,6 +208,12 @@ def login():
                 log['User'] = 'system_admin'
             else :
                 log['User'] = 'personel'
+                personel = db.session.query(Personel).filter(Personel.KullanıcıAdı == user.KullanıcıAdı).first()
+                if(personel != None):
+                    birim = db.session.query(Birim).filter(Birim.BirimKodu == personel.ÇalıştığıBirimKodu).first()
+                    if(birim != None):
+                        if(birim.BirimMüdürKullanıcıAdı == user.KullanıcıAdı):
+                            Müdür = True
             login_user(user)
             return log
         else:
@@ -202,6 +237,14 @@ def personel_home_page():
         return redirect(url_for('admin_home_nextpage'))
     else:
         return render_template('personel_home.html')
+
+@app.route('/personel/isManager/', methods=["GET", "POST"])
+@login_required
+def personel_home_question():
+    if(Müdür):
+        return "True"
+    else:
+        return "False"
 
 @app.route('/admin_nextpage/', methods=["GET"])
 @login_required
@@ -259,6 +302,14 @@ def admin_problem_form_page():
     else:
         abort(401)
 
+@app.route('/admin/problemform/isManager', methods=["GET"])
+@login_required
+def admin_problem_form_question():
+    if(Müdür):
+        return "True"
+    else:
+        return "False"
+
 @app.route('/personel/areaform', methods=["GET"])
 @login_required
 def personel_area_form_page():
@@ -300,16 +351,26 @@ def personel_indicator_form_page():
 def personel_problemunit_form_page():
     return render_template('personel_problemunit.html')
 
+@app.route('/personel/problemform', methods=["GET"])
+@login_required
+def personel_problem_form_page():
+    if(Müdür):
+        return render_template('admin_problem.html')
+    else:
+        abort(401)
+
 
 class User(Resource):
+    
     def post(self):
         infos = request.json
-        print(infos)
         if (infos['Type'] == 'CREATE'):
             if(db.session.query(Personel).filter_by(KullanıcıAdı=infos['Kullanıcı Adı']).count() == 0):
                 return "NO USERNAME"
             elif(db.session.query(Kullanıcı).filter_by(KullanıcıAdı=infos['Kullanıcı Adı']).count() == 0):
-                new_user = Kullanıcı(KullanıcıAdı=infos['Kullanıcı Adı'], Şifre=infos['Şifre'])
+                password = infos['Şifre']
+                encPassword = fernet.encrypt(password.encode())
+                new_user = Kullanıcı(KullanıcıAdı=infos['Kullanıcı Adı'], Şifre=encPassword)
                 db.session.add(new_user)
                 db.session.commit()
                 return "OK"
@@ -323,7 +384,7 @@ class User(Resource):
             if(username != ''):
                 user_list = user_list.filter(Kullanıcı.KullanıcıAdı==username)
             if(password != ''):
-                user_list = user_list.filter(Kullanıcı.Şifre==password)
+                user_list = user_list.filter(Kullanıcı.Şifre==fernet.decrypt(password).decode())
             count = 0
             send_users = []
             for the_user in user_list[::-1]:
@@ -347,18 +408,21 @@ class User(Resource):
                 return "NO USERNAME" # there is not such a person
         else:
             global system_admin_name
+            password = infos['Şifre']
+            encPassword = fernet.encrypt(password.encode())
             user = Kullanıcı.query.filter_by(KullanıcıAdı=infos['Eski Adı']).first()
             if(infos['Eski Adı'] == system_admin_name):
                 system_admin_name = infos['Kullanıcı Adı']
             user.KullanıcıAdı = infos['Kullanıcı Adı']
-            user.Şifre = infos['Şifre'] 
+            user.Şifre = encPassword
             db.session.commit()
             return "OK"
     def delete(self):
         infos = request.json
         user = Kullanıcı.query.filter_by(KullanıcıAdı=infos['Kullanıcı Adı'])
-        user.delete()
-        db.session.commit()
+        if(user.KullanıcıAdı != system_admin_name):
+            user.delete()
+            db.session.commit()
         return "OK"
 
 api.add_resource(User,'/admin/user')

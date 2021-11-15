@@ -63,7 +63,25 @@ const next_btn = document.getElementById("next_btn")
 for(let i = 0;i < quit_btn.length;i++){
     quit_btn[i].style.opacity = '0.5'
 }
+let müdür = false
 
+fetch('./isManager/')
+.then(response => response.json())
+.then(data => {
+    if(data == "True"){
+        müdür = True
+    }
+})
+if(müdür){
+    for(let i = 0;i < filter_list.length;i++){
+        filter_list[0].setAttribute("style","pointer-events:none")
+    }
+    for(let i = 0;i < item_problemtipiID.length;i++){
+        for(let j = 0;j < item_list.length-1;j++){
+            item_list[j][i].setAttribute("style", "pointer-events:none")
+        }
+    }
+}
 function mandatory_filter(){
     let b = true
     for(let i = 0;i < filter_list.length-1;i++){
@@ -193,8 +211,13 @@ for(let i = 0;i < update_btn.length;i++){
         if(update_btn[i].value == 'Güncelle'){
             update_btn[i].value = 'Onayla'
             quit_btn[i].style.opacity = '1'
-            for(let j = 0;j < item_list.length;j++){
-                item_list[j][i].setAttribute('style','pointer-events:all')
+            if(!müdür){
+                for(let j = 0;j < item_list.length;j++){
+                    item_list[j][i].setAttribute('style','pointer-events:all')
+                }
+            }
+            else {
+                item_list[5][i].setAttribute('style','pointer-events:all')
             }
         }
         else {
