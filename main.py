@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-ENV = 'prod'
+ENV = 'dev'
 
 if(ENV == 'dev'):
     app.debug = True
