@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/personel_extra_output_detail.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="filters">
+        <div class="row1">
+            <div class="problemID">
+                <input type="number" name="problemID" placeholder="Problem ID" id="filter_problemID">
+                <label for="problemID" class="label_item_problemID" style="color: black;">Bu ProblemID yok</label>
+            </div>
+            <div class="alanID">
+                <input type="number" name="alanID" placeholder="Alan ID" id="filter_alanID">
+                <label for="problemID" class="label_item_alanID" style="color: black;">Bu Çıktı yok</label>
+            </div>
+            <div class="sınıfID">
+                <input type="number" name="sınıfID" placeholder="Sınıf ID" id="filter_sınıfID">
+                <label for="sınıfID" class="label_item_sınıfID" style="color: black;">Bu Çıktı yok</label>
+            </div>
+            <div class="çıktıID">
+                <input type="number" name="çıktıID" placeholder="Çıktı ID" id="filter_çıktıID">
+                <label for="çıktıID" class="label_item_çıktıID" style="color: black;">Bu Çıktı yok</label>
+            </div>
+            <div class="belirteçID">
+                <input type="number" name="belirteçID" placeholder="Aktivite ID" id="filter_belirteçID">
+                <label for="belirteçID" class="label_item_belirteçID" style="color: black;">Bu BelirteçID yok</label>
+            </div>
+        </div>
+        <div class="row2">
+            <div class="sıra">
+                <input type="number" name="sıra" placeholder="Sıra" id="filter_sıra">
+            </div>
+            <div class="ekleyenKullanıcıAdı">
+                <input type="text" name="ekleyenKullanıcıAdı" placeholder="Ekleyen Kullanıcı Adı" id="filter_ekleyenKullanıcıAdı">
+                <label for="ekleyenKullanıcıAdı" class="label_item_ekleyenKullanıcıAdı" style="color: black;">Bu Kullanıcı Adı yok</label>
+            </div>
+            <div class="eklenmeTarihi">
+                <input type="date" name="eklenmeTarihi" placeholder="Eklenme Tarihi" id="filter_eklenmeTarihi">
+            </div>
+            <div class="button">
+                <input type="button" value="Müdahele Detay Oluştur" class="button" id="filter_create" style="color:white;background-color: green;">
+            </div>
+            <div class="button">
+                <input type="button" value="Müdahele Detay Listele" class="button" id="filter_list" style="color:white;background-color: blue;">
+            </div>
+        </div>
+    </div>
+    <div class="list">
+        <div class="title">
+            <div class="text">İLAVE ÇIKTI DETAY TABLOSU</div>
+        </div>
+        <div class="labels">
+            <div class="label1">
+                <div class="label11">Problem ID</div>
+                <div class="label12">Sıra</div>
+            </div>
+            <div class="label2">
+                <div class="label21">Alan ID</div>
+                <div class="label22">Ekleyen Kullanıcı Adı</div>
+            </div>
+            <div class="label3">
+                <div class="label31">Sınıf ID</div>
+                <div class="label32">Eklenme Tarihi</div>
+            </div>
+            <div class="label4">Çıktı ID</div>
+            <div class="label5">Belirteç ID</div>
+        </div>
+        <div class="item1 item">
+            <div class="row1">
+                <div class="problemID">
+                    <input type="number" name="problemID" placeholder="Problem ID" class="item_problemID">
+                    <label for="problemID" class="label_item_problemID" style="color: black;">Bu ProblemID yok</label>
+                </div>
+                <div class="alanID">
+                    <input type="number" name="alanID" placeholder="Alan ID" class="item_alanID">
+                    <label for="problemID" class="label_item_alanID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="sınıfID">
+                    <input type="number" name="sınıfID" placeholder="Sınıf ID" class="item_sınıfID">
+                    <label for="sınıfID" class="label_item_sınıfID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="çıktıID">
+                    <input type="number" name="çıktıID" placeholder="Çıktı ID" class="item_çıktıID">
+                    <label for="çıktıID" class="label_item_çıktıID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="belirteçID">
+                    <input type="number" name="belirteçID" placeholder="Aktivite ID" class="item_belirteçID">
+                    <label for="belirteçID" class="label_item_belirteçID" style="color: black;">Bu BelirteçID yok</label>
+                </div>
+            </div>
+            <div class="row2">
+                <div class="sıra">
+                    <input type="number" name="sıra" placeholder="Sıra" class="item_sıra">
+                </div>
+                <div class="ekleyenKullanıcıAdı">
+                    <input type="text" name="ekleyenKullanıcıAdı" placeholder="Ekleyen Kullanıcı Adı" class="item_ekleyenKullanıcıAdı">
+                    <label for="ekleyenKullanıcıAdı" class="label_item_ekleyenKullanıcıAdı" style="color: black;">Bu Kullanıcı Adı yok</label>
+                </div>
+                <div class="eklenmeTarihi">
+                    <input type="date" name="eklenmeTarihi" placeholder="Eklenme Tarihi" class="item_eklenmeTarihi">
+                </div>
+                <div class="button">
+                    <input type="button" value="Güncelle" class="button update" style="color:white;background-color: green;">
+                    <input type="button" value="Vazgeç" class="button quit" style="color:white;background-color: red;">
+                </div>
+                <div class="button">
+                    <input type="button" value="Sil" class="button delete" style="color:white;background-color: blue;">
+                </div>
+            </div>
+        </div>
+        <div class="item2 item">
+            <div class="row1">
+                <div class="problemID">
+                    <input type="number" name="problemID" placeholder="Problem ID" class="item_problemID">
+                    <label for="problemID" class="label_item_problemID" style="color: black;">Bu ProblemID yok</label>
+                </div>
+                <div class="alanID">
+                    <input type="number" name="alanID" placeholder="Alan ID" class="item_alanID">
+                    <label for="problemID" class="label_item_alanID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="sınıfID">
+                    <input type="number" name="sınıfID" placeholder="Sınıf ID" class="item_sınıfID">
+                    <label for="sınıfID" class="label_item_sınıfID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="çıktıID">
+                    <input type="number" name="çıktıID" placeholder="Çıktı ID" class="item_çıktıID">
+                    <label for="çıktıID" class="label_item_çıktıID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="belirteçID">
+                    <input type="number" name="belirteçID" placeholder="Aktivite ID" class="item_belirteçID">
+                    <label for="belirteçID" class="label_item_belirteçID" style="color: black;">Bu BelirteçID yok</label>
+                </div>
+            </div>
+            <div class="row2">
+                <div class="sıra">
+                    <input type="number" name="sıra" placeholder="Sıra" class="item_sıra">
+                </div>
+                <div class="ekleyenKullanıcıAdı">
+                    <input type="text" name="ekleyenKullanıcıAdı" placeholder="Ekleyen Kullanıcı Adı" class="item_ekleyenKullanıcıAdı">
+                    <label for="ekleyenKullanıcıAdı" class="label_item_ekleyenKullanıcıAdı" style="color: black;">Bu Kullanıcı Adı yok</label>
+                </div>
+                <div class="eklenmeTarihi">
+                    <input type="date" name="eklenmeTarihi" placeholder="Eklenme Tarihi" class="item_eklenmeTarihi">
+                </div>
+                <div class="button">
+                    <input type="button" value="Güncelle" class="button update" style="color:white;background-color: green;">
+                    <input type="button" value="Vazgeç" class="button quit" style="color:white;background-color: red;">
+                </div>
+                <div class="button">
+                    <input type="button" value="Sil" class="button delete" style="color:white;background-color: blue;">
+                </div>
+            </div>
+        </div>
+        <div class="item3 item">
+            <div class="row1">
+                <div class="problemID">
+                    <input type="number" name="problemID" placeholder="Problem ID" class="item_problemID">
+                    <label for="problemID" class="label_item_problemID" style="color: black;">Bu ProblemID yok</label>
+                </div>
+                <div class="alanID">
+                    <input type="number" name="alanID" placeholder="Alan ID" class="item_alanID">
+                    <label for="problemID" class="label_item_alanID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="sınıfID">
+                    <input type="number" name="sınıfID" placeholder="Sınıf ID" class="item_sınıfID">
+                    <label for="sınıfID" class="label_item_sınıfID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="çıktıID">
+                    <input type="number" name="çıktıID" placeholder="Çıktı ID" class="item_çıktıID">
+                    <label for="çıktıID" class="label_item_çıktıID" style="color: black;">Bu Çıktı yok</label>
+                </div>
+                <div class="belirteçID">
+                    <input type="number" name="belirteçID" placeholder="Aktivite ID" class="item_belirteçID">
+                    <label for="belirteçID" class="label_item_belirteçID" style="color: black;">Bu BelirteçID yok</label>
+                </div>
+            </div>
+            <div class="row2">
+                <div class="sıra">
+                    <input type="number" name="sıra" placeholder="Sıra" class="item_sıra">
+                </div>
+                <div class="ekleyenKullanıcıAdı">
+                    <input type="text" name="ekleyenKullanıcıAdı" placeholder="Ekleyen Kullanıcı Adı" class="item_ekleyenKullanıcıAdı">
+                    <label for="ekleyenKullanıcıAdı" class="label_item_ekleyenKullanıcıAdı" style="color: black;">Bu Kullanıcı Adı yok</label>
+                </div>
+                <div class="eklenmeTarihi">
+                    <input type="date" name="eklenmeTarihi" placeholder="Eklenme Tarihi" class="item_eklenmeTarihi">
+                </div>
+                <div class="button">
+                    <input type="button" value="Güncelle" class="button update" style="color:white;background-color: green;">
+                    <input type="button" value="Vazgeç" class="button quit" style="color:white;background-color: red;">
+                </div>
+                <div class="button">
+                    <input type="button" value="Sil" class="button delete" style="color:white;background-color: blue;">
+                </div>
+            </div>
+        </div>
+        <div class="pagination">
+            <div class="backpage">
+                <a href="./nextPage"><input type="button" value="Anasayfaya git"></a>
+            </div>
+            <div class="previous">
+                <button id="prev_btn"><<</button>
+            </div>
+            <div class="next">
+                <button id="next_btn">>></button>
+            </div>
+        </div>
+    </div>
+    <script src="../static/js/personel_extra_output_detail.js"></script>
+</body>
+</html>

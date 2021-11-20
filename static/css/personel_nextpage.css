@@ -9,63 +9,90 @@ body {
     height: 100vh;
     background-color: gray;
 }
-.f1, .f2, .f3, .f4, .f5, .f6 {
+.f1, .f2, .f3, .f4, .f5, .f6, .f7, .f8, .f9 {
     position: absolute;
     top : 50%;
     left : 50%;
     transform: translate(-50%, -50%);
     font-size: medium;
 }
-.manage-alan {
+.problemler {
     position: absolute;
     height: 40%;
-    width : 29%;
-    left: 3%;
+    width : 19%;
+    left: 0.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
 }
-.manage-sinif {
+.problemmüdahaleleri {
     position: absolute;
     height: 40%;
-    width : 30%;
-    left: 35%;
+    width : 19%;
+    left: 20.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
 }
-.manage-cikti {
+.problemçıktıları {
     position: absolute;
     height: 40%;
-    width : 29%;
-    left: 3%;
+    width : 19%;
+    left: 40.5%;
+    top:5%;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+.ilavemüdahaledetaylar {
+    position: absolute;
+    height: 40%;
+    width : 19%;
+    left: 60.5%;
+    top:5%;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+.ilaveçıktıdetaylar {
+    position: absolute;
+    height: 40%;
+    width : 19%;
+    left: 80.5%;
+    top:5%;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+.personelproblem {
+    position: absolute;
+    height: 40%;
+    width : 19%;
+    left: 0.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
 }
-.manage-belirtec {
+.problemçıktıdeğerlendirme {
     position: absolute;
     height: 40%;
-    width : 30%;
-    left: 35%;
+    width : 19%;
+    left: 20.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
 }
-.manage-problembirim {
+.problemdurumdeğerlendirme {
     position: absolute;
     height: 40%;
-    width : 29%;
-    left: 68%;
-    top:5%;
+    width : 19%;
+    left: 40.5%;
+    bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
 }
-.manage-problem {
+.çalışanproblem {
     position: absolute;
     height: 40%;
-    width : 29%;
-    left: 68%;
+    width : 19%;
+    left: 60.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
@@ -87,18 +114,10 @@ body {
     width: 10%;
     height: 5%;
 }
-.nextpage {
-    position: absolute;
-    bottom : 2.5%;
-    right : 3%;
-    width: 10%;
-    height: 5%;
-    visibility: hidden;
-}
-#previouspage, #nextpage {
+#previouspage {
     padding: 5px 10px;
     
 }
-#previouspage:hover, #nextpage:hover {
+#previouspage:hover {
     cursor: pointer;
 }

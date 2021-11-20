@@ -1,0 +1,193 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+}
+.filters {
+    position: absolute;
+    top: 0;
+    width : 100%;
+    height : 20%;
+}
+.list {
+    position: absolute;
+    bottom: 0;
+    width : 100%;
+    height : 80%;
+}
+.item {
+    background-color: gray;
+    visibility: hidden;
+}
+.item, .title, .pagination {
+    width : 100%;
+    height: 14.3%;
+    border: 1px solid black;
+}
+.title {
+    position: relative;
+    border-top: 0px;
+    height: 10%;
+    color:white;
+    background-color: black;
+}
+.text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: large;
+}
+.labels {
+    height: 4.3%;
+    width: 100%;
+    color: white;
+    background-color: black;    
+}
+.label1, .label2, .label3, .label4, .label5, .label6{
+    float: left;
+    width: 16%;
+    text-align: center;
+    font-size: larger;
+}
+.label5, .label6 {
+    width: 18%;
+}
+.alanID, .sinifID, .mudahaleID, .problemID, .button1, .button2 {
+    float: left;
+    width : 16%;
+    height : 100%;
+    position: relative;
+}
+.button1, .button2 {
+    width : 18%;
+}
+.filters .button1 input, .filters .button2 input {
+    width: 75%;
+}
+input, select {
+    position: absolute;
+    top : 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid black;
+    padding: 10px;
+    width: 90%;
+}
+.quit {
+    position: absolute;
+    right: 10%;
+    top : 50%;
+    transform: translateY(-50%);
+    border: 1px solid black;
+    padding: 10px;
+    width : 35%;
+}
+.button1 .update {
+    position: absolute;
+    color: white;
+    background-color: green;
+    left: 30%;
+    width: 35%;
+}
+.button2 .delete {
+    color: white;
+    background-color: blue;
+    width: 50%;
+}
+.quit {
+    color: white;
+    background-color: red;
+}
+input, button, select {
+    border-radius: 5px;
+}
+.button {
+    width : 25%;
+}
+.button:hover, .quit:hover {
+    cursor: pointer;
+}
+.pagination {
+    position: absolute;
+    bottom: 0;
+    background-color: black;
+}
+.backpage {
+    position: absolute;
+    top : 50%;
+    left: 1%;
+    transform: translateY(-50%);
+    width: 9%;
+}
+.backpage input {
+    color: white;
+    background-color: black;
+}
+.previous {
+    position: absolute;
+    top : 50%;
+    right: 10%;
+    transform: translateY(-50%);
+}
+.next {
+    position: absolute;
+    top : 50%;
+    right: 5%;
+    transform: translateY(-50%);
+}
+.pagination input:hover {
+    cursor: pointer;
+}
+
+.label_item_alanID, .label_item_sinifID, .label_item_mudahaleID, .label_item_problemID{
+    position: absolute;
+    top: 75%;
+    left: 40%;
+    transform: translateX(-50%);
+    color: black;
+    visibility: hidden;
+    font-size: small;
+}
+.previous {
+    position: absolute;
+    top : 50%;
+    right: 10%;
+    transform: translateY(-50%);
+    width: 3%;
+    height : 50%;
+}
+.next {
+    position: absolute;
+    top : 50%;
+    right: 5%;
+    transform: translateY(-50%);
+    width: 3%;
+    height : 50%;
+}
+#prev_btn {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+#next_btn {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+#prev_btn:hover, #next_btn:hover {
+    cursor: pointer;
+}
+#prev_btn:hover, #next_btn:hover {
+    cursor: pointer;
+}
+#item_alantipi {
+    width : 70%;
+    text-align: center;
+}

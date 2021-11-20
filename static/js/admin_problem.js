@@ -65,23 +65,35 @@ for(let i = 0;i < quit_btn.length;i++){
 }
 let müdür = false
 
-fetch('./isManager/')
+fetch('../personel/isManager/')
 .then(response => response.json())
 .then(data => {
+    console.log(data);
     if(data == "True"){
-        müdür = True
+        müdür = true
     }
-})
-if(müdür){
-    for(let i = 0;i < filter_list.length;i++){
-        filter_list[0].setAttribute("style","pointer-events:none")
+    if(müdür){
+        for(let i = 0;i < filter_list.length-1;i++){
+            filter_list[i].setAttribute("style","pointer-events:none")
+        }
+        for(let i = 0;i < item_problemtipiID.length;i++){
+            for(let j = 0;j < item_list.length-1;j++){
+                item_list[j][i].setAttribute("style", "pointer-events:none")
+            }
+        }
+        filter_create.setAttribute("style", "pointer-events:none")
+        let go_mainpage = document.getElementById("mainpage")
+        go_mainpage.setAttribute("href", "./nextPage")
     }
-    for(let i = 0;i < item_problemtipiID.length;i++){
-        for(let j = 0;j < item_list.length-1;j++){
-            item_list[j][i].setAttribute("style", "pointer-events:none")
+    else {
+        console.log("girdi");
+        filter_hedeflenenamactanimi.style.pointerEvents = 'none'
+        for(let i = 0;i < item_problemtipiID.length;i++){
+            item_hedeflenenamactanimi[i].style.pointerEvents = 'none'
         }
     }
-}
+})
+
 function mandatory_filter(){
     let b = true
     for(let i = 0;i < filter_list.length-1;i++){
@@ -162,8 +174,10 @@ function list_from_zero(page){
     for(let i = 0;i < rows.length;i++){
         rows[i].style.visibility = 'hidden'
     }
-    reset_filter()
-    item_error[0].style.visibility = 'hidden'
+    if(!müdür){
+        reset_filter()
+        item_error[0].style.visibility = 'hidden'
+    }
     let send_data = {
         'Type' : 'LIST',
         'ProblemTipiID' : filter_problemtipiID.value,
@@ -174,7 +188,11 @@ function list_from_zero(page){
         'HedeflenenAmaçTanımı' : filter_hedeflenenamactanimi.value,
         'Sayfa' : page
     }
-    fetch('./problem', {
+    let url = './problem'
+    if(müdür){
+        url = '../admin/problem'
+    }
+    fetch(`${url}`, {
         method : 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -212,13 +230,11 @@ for(let i = 0;i < update_btn.length;i++){
             update_btn[i].value = 'Onayla'
             quit_btn[i].style.opacity = '1'
             if(!müdür){
-                for(let j = 0;j < item_list.length;j++){
+                for(let j = 0;j < item_list.length-1;j++){
                     item_list[j][i].setAttribute('style','pointer-events:all')
                 }
             }
-            else {
-                item_list[5][i].setAttribute('style','pointer-events:all')
-            }
+            
         }
         else {
             if(mandatory_item(i)){
@@ -231,7 +247,11 @@ for(let i = 0;i < update_btn.length;i++){
                     'ProblemiTanımlayanTCnoPasaportno' : item_problemitanimlayantcnopasaportno[i].value,
                     'HedeflenenAmaçTanımı' : item_hedeflenenamactanimi[i].value,
                 }
-                fetch('./problem', {
+                let url = './problem'
+                if(müdür){
+                    url = '../admin/problem'
+                }
+                fetch(`${url}`, {
                     method : 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -277,7 +297,11 @@ for(let i = 0;i < update_btn.length;i++){
             'ProblemTipiID' : prev_item_problemtipiID[i]
         }
         reset_item(i)
-        fetch('./problem', {
+        let url = './problem'
+        if(müdür){
+            url = '../admin/problem'
+        }
+        fetch(`${url}`, {
             method : 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

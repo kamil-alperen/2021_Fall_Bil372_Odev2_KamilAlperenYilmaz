@@ -9,7 +9,7 @@ body {
     height: 100vh;
     background-color: gray;
 }
-.f1, .f2, .f3, .f4, .f5, .f6, .f7, .f8 {
+.f1, .f2, .f3, .f4, .f5, .f6, .f7, .f8, .f9, .f10 {
     position: absolute;
     top : 50%;
     left : 50%;
@@ -19,8 +19,8 @@ body {
 .manage-users {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 2.5%;
+    width : 19%;
+    left: 0.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
@@ -28,8 +28,8 @@ body {
 .manage-employees {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 27%;
+    width : 19%;
+    left: 20.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
@@ -37,8 +37,8 @@ body {
 .manage-cities {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 51.5%;
+    width : 19%;
+    left: 40.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
@@ -46,8 +46,8 @@ body {
 .manage-districts {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 76%;
+    width : 19%;
+    left: 60.5%;
     top:5%;
     border: 3px solid black;
     border-radius: 10px;
@@ -55,17 +55,17 @@ body {
 .manage-units {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 2.5%;
-    bottom:10%;
+    width : 19%;
+    left: 80.5%;
+    top:5%;
     border: 3px solid black;
     border-radius: 10px;
 }
 .manage-problems {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 27%;
+    width : 19%;
+    left: 0.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
@@ -73,8 +73,8 @@ body {
 .manage-mudahaleler {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 51.5%;
+    width : 19%;
+    left: 20.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;
@@ -82,8 +82,26 @@ body {
 .manage-aktiviteler {
     position: absolute;
     height: 40%;
-    width : 22%;
-    left: 76%;
+    width : 19%;
+    left: 40.5%;
+    bottom:10%;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+.manage-müdahaledetaylar {
+    position: absolute;
+    height: 40%;
+    width : 19%;
+    left: 60.5%;
+    bottom:10%;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+.manage-çıktıdetaylar {
+    position: absolute;
+    height: 40%;
+    width : 19%;
+    left: 80.5%;
     bottom:10%;
     border: 3px solid black;
     border-radius: 10px;

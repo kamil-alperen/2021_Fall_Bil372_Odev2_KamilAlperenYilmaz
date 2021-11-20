@@ -1,26 +1,24 @@
 from os import abort
-from flask import Flask, request, redirect, sessions, url_for, render_template
+from flask import Flask, request, redirect, session, url_for, render_template, jsonify
 from flask_login.utils import logout_user
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource, Api
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user
-from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.schema import PrimaryKeyConstraint
 from datetime import datetime
 from cryptography.fernet import Fernet
-from sqlalchemy.ext.hybrid import hybrid_property
 
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-ENV = 'prod'
+ENV = 'dev'
 
 if(ENV == 'dev'):
     app.debug = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:kamil1789@localhost/COMPANY'
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://owirdaelqqvcat:e813c0f8f0ce7de03b7e446085f29d2b81c4e75b22799c8ad7aef66640b43beb@ec2-34-195-233-155.compute-1.amazonaws.com:5432/d5ochgc7du2jfp'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://czldvzrfajlvsw:e4f5393569cbf42449154538c3784ba5654126ce57f99a6cf0fb2e3329e7218b@ec2-52-201-195-11.compute-1.amazonaws.com:5432/d9kk1fd0gghtj9'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -35,7 +33,7 @@ system_admin_name = "SystemAdmin"
 
 class Kullanıcı(UserMixin, db.Model):
     __tablename__ = "Kullanıcı"
-    KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), primary_key=True)
+    KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), primary_key=True)
     Şifre = db.Column(db.String(500), nullable=False)
     def get_id(self):
         try:
@@ -45,7 +43,7 @@ class Kullanıcı(UserMixin, db.Model):
 
 class İlçe(db.Model):
     __tablename__ = "İlçe"
-    İlKodu = db.Column(db.String(15), db.ForeignKey('İl.İlKodu'), nullable=False)
+    İlKodu = db.Column(db.String(15), db.ForeignKey('İl.İlKodu',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     İlçeAdı = db.Column(db.String(30), nullable=False)
     __table_args__ = (
@@ -67,10 +65,13 @@ class Personel(db.Model):
     İlKodu = db.Column(db.String(15), nullable=False)
     İlçeKodu = db.Column(db.String(15), nullable=False)
     PostaKodu = db.Column(db.Integer, nullable=False)
-    ÜstKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı'), nullable=True)
-    ÇalıştığıBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=False)
+    ÜstKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=True)
+    ÇalıştığıBirimKodu = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     üst_kullanıcı_adı = db.relationship('Personel', remote_side=[KullanıcıAdı], uselist=False)
     kullanıcı_ = db.relationship('Kullanıcı', backref='personel', lazy=True, uselist=False)
+    personelproblem = db.relationship('PersonelProblem', backref='personel', lazy=True)
+    ilave_müdahale_detay = db.relationship('İlaveMüdahaleDetay', backref='personel', lazy=True)
+    ilave_çıktı_detay = db.relationship('İlaveÇıktıDetay', backref='personel', lazy=True)
     __table_args__ = (db.ForeignKeyConstraint([İlKodu, İlçeKodu],
                                               [İlçe.İlKodu, İlçe.İlçeKodu]),
                       {})
@@ -107,6 +108,12 @@ class Problem(db.Model):
     ProblemiTanımlayanTCnoPasaportno = db.Column(db.String(30), nullable=False)
     HedeflenenAmaçTanımı = db.Column(db.String(50), nullable=False)
     problem_eşleşme = db.relationship('ProblemBirim', backref='problem', lazy=True)
+    problem_müdahale = db.relationship('ProblemMüdahale', backref='problem', lazy=True)
+    problem_çıktı = db.relationship('ProblemÇıktı', backref='problem', lazy=True)
+    problemçıktıdeğerlendirme = db.relationship('ProblemÇıktıDeğerlendirme', backref='problem', lazy=True)
+    personelproblem = db.relationship('PersonelProblem', backref='problem', lazy=True)
+    ilave_müdahale_detaylar = db.relationship('İlaveMüdahaleDetay', backref='problem', lazy=True)
+    ilave_çıktı_detaylar = db.relationship('İlaveÇıktıDetay', backref='problem', lazy=True)
 
 class Alan(db.Model):
     __tablename__ = "Alan"
@@ -126,71 +133,190 @@ class Sınıf(db.Model):
 
 class Müdahale(db.Model):
     __tablename__ = "Müdahale"
-    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID'), nullable=False)
-    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID'), nullable=False)
+    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     MüdahaleID = db.Column(db.Integer, nullable=False)
     MüdahaleAdı = db.Column(db.String(30), nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('AlanID', 'SınıfID','MüdahaleID'),
     )
+    müdahale_müdahaledetaylar = db.relationship('MüdahaleDetay', backref='müdahale', lazy=True)
+    müdahale_ilavemüdahaledetaylar = db.relationship('İlaveMüdahaleDetay', backref='müdahale', lazy=True)
+    problem_müdahaleler = db.relationship('ProblemMüdahale', backref='müdahale', lazy=True)
 
 class Aktivite(db.Model):
     __tablename__ = "Aktivite"
     AktiviteID = db.Column(db.Integer, primary_key=True)
     AktiviteTanımı = db.Column(db.String(30), nullable=False)
+    aktivite_müdahaledetaylar = db.relationship('MüdahaleDetay', backref='aktivite', lazy=True)
+    aktivite_ilavemüdahaledetaylar = db.relationship('İlaveMüdahaleDetay', backref='aktivite', lazy=True)
 
 class MüdahaleDetay(db.Model):
     __tablename__ = "MüdahaleDetay"
     AlanID = db.Column(db.Integer, nullable=False)
     SınıfID = db.Column(db.Integer, nullable=False)
     MüdahaleID = db.Column(db.Integer, nullable=False)
-    AktiviteID = db.Column(db.Integer, nullable=False)
+    AktiviteID = db.Column(db.Integer, db.ForeignKey('Aktivite.AktiviteID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     Sıra = db.Column(db.Integer, nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('AlanID', 'SınıfID','MüdahaleID','AktiviteID'),
-    )
+        db.ForeignKeyConstraint([AlanID, SınıfID, MüdahaleID],
+                                [Müdahale.AlanID, Müdahale.SınıfID, Müdahale.MüdahaleID]),
+        {})
+
 
 class Çıktı(db.Model):
     __tablename__ = "Çıktı"
-    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID'), nullable=False)
-    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID'), nullable=False)
+    AlanID = db.Column(db.Integer, db.ForeignKey('Alan.AlanID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    SınıfID = db.Column(db.Integer, db.ForeignKey('Sınıf.SınıfID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     ÇıktıID = db.Column(db.Integer, nullable=False)
     ÇıktıAdı = db.Column(db.String(30), nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('AlanID', 'SınıfID','ÇıktıID'),
     )
+    çıktı_çıktıdetaylar = db.relationship('ÇıktıDetay', backref='çıktı', lazy=True)
+    çıktı_ilaveçıktıdetaylar = db.relationship('İlaveÇıktıDetay', backref='çıktı', lazy=True)
+    problem_çıktılar = db.relationship('ProblemÇıktı', backref='çıktı', lazy=True)
 
 class Belirteç(db.Model):
     __tablename__ = "Belirteç"
     BelirteçID = db.Column(db.Integer, primary_key=True)
     BelirteçTanımı = db.Column(db.String(30), nullable=False)
+    belirteç_çıktıdetaylar = db.relationship('ÇıktıDetay', backref='belirteç', lazy=True)
+    belirteç_ilaveçıktıdetaylar = db.relationship('İlaveÇıktıDetay', backref='belirteç', lazy=True)
+    problemçıktıdeğerlendirmeler = db.relationship('ProblemÇıktıDeğerlendirme', backref='belirteç', lazy=True)
 
 class ÇıktıDetay(db.Model):
     __tablename__ = "ÇıktıDetay"
     AlanID = db.Column(db.Integer, nullable=False)
     SınıfID = db.Column(db.Integer, nullable=False)
     ÇıktıID = db.Column(db.Integer, nullable=False)
-    BelirteçID = db.Column(db.Integer, nullable=False)
+    BelirteçID = db.Column(db.Integer, db.ForeignKey('Belirteç.BelirteçID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     Sıra = db.Column(db.Integer, nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('AlanID', 'SınıfID','ÇıktıID','BelirteçID'),
-    )
-
+        db.ForeignKeyConstraint([AlanID, SınıfID, ÇıktıID],
+                                [Çıktı.AlanID, Çıktı.SınıfID, Çıktı.ÇıktıID]),
+        {})
+                
 class ProblemBirim(db.Model):
     __tablename__ = "ProblemBirim"
-    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID'), nullable=False)
-    BirimID = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu'), nullable=False)
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    BirimID = db.Column(db.Integer, db.ForeignKey('Birim.BirimKodu',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
     EşleşmeTarihi = db.Column(db.DateTime, nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('ProblemID', 'BirimID'),
     )
+
+class ProblemMüdahale(db.Model):
+    __tablename__ = "ProblemMüdahale"
+    AlanID = db.Column(db.Integer, nullable=False)
+    SınıfID = db.Column(db.Integer, nullable=False)
+    MüdahaleID = db.Column(db.Integer, nullable=False)
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('AlanID', 'SınıfID','MüdahaleID','ProblemID'),
+        db.ForeignKeyConstraint([AlanID, SınıfID, MüdahaleID],
+                                [Müdahale.AlanID, Müdahale.SınıfID, Müdahale.MüdahaleID]),
+        {})
+
+class ProblemÇıktı(db.Model):
+    __tablename__ = "ProblemÇıktı"
+    AlanID = db.Column(db.Integer, nullable=False)
+    SınıfID = db.Column(db.Integer, nullable=False)
+    ÇıktıID = db.Column(db.Integer, nullable=False)
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('AlanID', 'SınıfID','ÇıktıID','ProblemID'),
+        db.ForeignKeyConstraint([AlanID, SınıfID, ÇıktıID],
+                                [Çıktı.AlanID, Çıktı.SınıfID, Çıktı.ÇıktıID]),
+        {})
+
+class İlaveMüdahaleDetay(db.Model):
+    __tablename__ = "İlaveMüdahaleDetay"
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    AlanID = db.Column(db.Integer, nullable=False)
+    SınıfID = db.Column(db.Integer, nullable=False)
+    MüdahaleID = db.Column(db.Integer, nullable=False)
+    AktiviteID = db.Column(db.Integer, db.ForeignKey('Aktivite.AktiviteID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    Sıra = db.Column(db.Integer, nullable=False)
+    EkleyenKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    EklenmeTarihi = db.Column(db.DateTime, nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID', 'AlanID', 'SınıfID','MüdahaleID','AktiviteID'),
+        db.ForeignKeyConstraint([AlanID, SınıfID, MüdahaleID],
+                                [Müdahale.AlanID, Müdahale.SınıfID, Müdahale.MüdahaleID]),
+        {})
+
+class İlaveÇıktıDetay(db.Model):
+    __tablename__ = "İlaveÇıktıDetay"
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    AlanID = db.Column(db.Integer, nullable=False)
+    SınıfID = db.Column(db.Integer, nullable=False)
+    ÇıktıID = db.Column(db.Integer, nullable=False)
+    BelirteçID = db.Column(db.Integer, db.ForeignKey('Belirteç.BelirteçID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    Sıra = db.Column(db.Integer, nullable=False)
+    EkleyenKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    EklenmeTarihi = db.Column(db.DateTime, nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID', 'AlanID', 'SınıfID','ÇıktıID','BelirteçID'),
+        db.ForeignKeyConstraint([AlanID, SınıfID, ÇıktıID],
+                                [Çıktı.AlanID, Çıktı.SınıfID, Çıktı.ÇıktıID]),
+        {})
+
+class PersonelProblem(db.Model):
+    __tablename__ = "PersonelProblem"
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID', 'KullanıcıAdı'),
+    )
+
+class ProblemÇıktıDeğerlendirme(db.Model):
+    __tablename__ = "ProblemÇıktıDeğerlendirme"
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    BelirteçID = db.Column(db.Integer, db.ForeignKey('Belirteç.BelirteçID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    Skor = db.Column(db.Integer, nullable=True)
+    SkorTarihi = db.Column(db.DateTime, nullable=True)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID', 'BelirteçID'),
+    )
+
+class ProblemDurumDeğerlendirme(db.Model):
+    __tablename__ = "ProblemDurumDeğerlendirme"
+    ProblemID = db.Column(db.Integer, nullable=False)
+    YeniProblemID = db.Column(db.Integer, nullable=False)
+    YeniProblemTanımı = db.Column(db.String(30), nullable=False)
+    YeniHedef = db.Column(db.String(30), nullable=False)
+    ÖncekiProblemSkoru = db.Column(db.Integer, nullable=False)
+    TahminEdilenProblemSkoru = db.Column(db.Integer, nullable=False)
+    DeğerlendirmeTarihi = db.Column(db.DateTime, nullable=False)
+    DeğerlendirenKullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID'),
+    )
+
+class ÇalışanProblem(db.Model):
+    __tablename__ = "ÇalışanProblem"
+    ProblemID = db.Column(db.Integer, db.ForeignKey('Problem.ProblemTipiID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    KullanıcıAdı = db.Column(db.String(30), db.ForeignKey('Personel.KullanıcıAdı',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    AlanID = db.Column(db.Integer)
+    SınıfID = db.Column(db.Integer)
+    MüdahaleID = db.Column(db.Integer)
+    AktiviteID = db.Column(db.Integer, db.ForeignKey('Aktivite.AktiviteID',onupdate="CASCADE", ondelete="CASCADE"), nullable=False)
+    AktiviteAçıklama = db.Column(db.String(30))
+    Tarihi = db.Column(db.DateTime)
+    __table_args__ = (
+        PrimaryKeyConstraint('ProblemID','KullanıcıAdı'),
+        db.ForeignKeyConstraint([AlanID, SınıfID, MüdahaleID],
+                                [Müdahale.AlanID, Müdahale.SınıfID, Müdahale.MüdahaleID]),
+        {})
 
 
 @login_manager.user_loader
 def load_user(user_id):
     return Kullanıcı.query.get(user_id)
 
-Müdür = False
 
 @app.route('/', methods=["GET","POST"])
 def login():
@@ -201,6 +327,7 @@ def login():
         infos = request.json
         if(db.session.query(Kullanıcı).filter(Kullanıcı.KullanıcıAdı==infos["Username"],Kullanıcı.Şifre==infos["Password"])).count() != 0:
             user = db.session.query(Kullanıcı).filter(Kullanıcı.KullanıcıAdı == infos["Username"]).first()
+            session['Müdür'] = False
             if(user.KullanıcıAdı == system_admin_name):
                 log['User'] = 'system_admin'
             else :
@@ -210,7 +337,8 @@ def login():
                     birim = db.session.query(Birim).filter(Birim.BirimKodu == personel.ÇalıştığıBirimKodu).first()
                     if(birim != None):
                         if(birim.BirimMüdürKullanıcıAdı == user.KullanıcıAdı):
-                            Müdür = True
+                            session['Müdür'] = True
+                            print("MÜDÜR : TRUE")
             login_user(user)
             return log
         else:
@@ -238,10 +366,10 @@ def personel_home_page():
 @app.route('/personel/isManager/', methods=["GET", "POST"])
 @login_required
 def personel_home_question():
-    if(Müdür):
-        return "True"
+    if(session['Müdür']):
+        return jsonify("True")
     else:
-        return "False"
+        return jsonify("False")
 
 @app.route('/admin_nextpage/', methods=["GET"])
 @login_required
@@ -302,10 +430,10 @@ def admin_problem_form_page():
 @app.route('/admin/problemform/isManager', methods=["GET"])
 @login_required
 def admin_problem_form_question():
-    if(Müdür):
-        return "True"
+    if(session['Müdür']):
+        return jsonify("True")
     else:
-        return "False"
+        return jsonify("False")
 
 @app.route('/personel/areaform', methods=["GET"])
 @login_required
@@ -351,14 +479,109 @@ def personel_problemunit_form_page():
 @app.route('/personel/problemform', methods=["GET"])
 @login_required
 def personel_problem_form_page():
-    if(Müdür):
+    if(session['Müdür']):
         return render_template('admin_problem.html')
     else:
         abort(401)
 
+@app.route('/admin/müdahaledetaylarform', methods=["GET"])
+@login_required
+def admin_müdahaledetaylar_form_page():
+    if(current_user.KullanıcıAdı == system_admin_name):
+        return render_template('admin_intervention_detail.html')
+    else:
+        abort(401) 
 
-class User(Resource):
-    
+@app.route('/admin/çıktıdetaylarform', methods=["GET"])
+@login_required
+def admin_çıktıdetaylar_form_page():
+    if(current_user.KullanıcıAdı == system_admin_name):
+        return render_template('admin_output_detail.html')
+    else:
+        abort(401)
+
+@app.route('/personel/nextPage', methods=["GET"])
+@login_required
+def personel_next_page():
+    if(session['Müdür']):
+        return render_template('personel_nextpage.html')
+    else:
+        abort(401)
+
+@app.route('/personel/problemler_form', methods=["GET"])
+@login_required
+def problemler_form():
+    if(session['Müdür']):
+        return render_template('admin_problem.html')
+    else:
+        abort(401)
+
+@app.route('/personel/problemmüdahaleleri_form', methods=["GET"])
+@login_required
+def problemmüdahaleleri_form():
+    if(session['Müdür']):
+        return render_template('personel_problem_intervention.html')
+    else:
+        abort(401)
+
+@app.route('/personel/problemçıktıları_form', methods=["GET"])
+@login_required
+def problemçıktıları_form():
+    if(session['Müdür']):
+        return render_template('personel_problem_output.html')
+    else:
+        abort(401)
+
+@app.route('/personel/ilavemüdahaledetaylar_form', methods=["GET"])
+@login_required
+def ilavemüdahaledetaylar_form():
+    if(session['Müdür']):
+        return render_template('personel_extra_intervention_detail.html')
+    else:
+        abort(401)
+
+@app.route('/personel/ilaveçıktıdetaylar_form', methods=["GET"])
+@login_required
+def ilaveçıktıdetaylar_form():
+    if(session['Müdür']):
+        return render_template('personel_extra_output_detail.html')
+    else:
+        abort(401)
+
+@app.route('/personel/personelproblem_form', methods=["GET"])
+@login_required
+def personelproblem_form():
+    if(session['Müdür']):
+        return render_template('personel_personelproblem.html')
+    else:
+        abort(401)
+
+@app.route('/personel/problemçıktıdeğerlendirme_form', methods=["GET"])
+@login_required
+def problemçıktıdeğerlendirme_form():
+    if(session['Müdür']):
+        return render_template('personel_problemoutput_evaluation.html')
+    else:
+        abort(401)
+
+@app.route('/personel/problemdurumdeğerlendirme_form', methods=["GET"])
+@login_required
+def problemdurumdeğerlendirme_form():
+    if(session['Müdür']):
+        return render_template('personel_problem_case_evaluation.html')
+    else:
+        abort(401)
+
+@app.route('/personel/çalışanproblem_form', methods=["GET"])
+@login_required
+def çalışanproblem_form():
+    if(session['Müdür']):
+        return render_template('personel_employee_problem.html')
+    else:
+        abort(401)
+
+
+class User(Resource):    
     def post(self):
         infos = request.json
         if (infos['Type'] == 'CREATE'):
@@ -412,9 +635,9 @@ class User(Resource):
             return "OK"
     def delete(self):
         infos = request.json
-        user = Kullanıcı.query.filter_by(KullanıcıAdı=infos['Kullanıcı Adı'])
+        user = Kullanıcı.query.filter_by(KullanıcıAdı=infos['Kullanıcı Adı']).first()
         if(user.KullanıcıAdı != system_admin_name):
-            user.delete()
+            db.session.delete(user)
             db.session.commit()
         return "OK"
 
@@ -679,7 +902,7 @@ class Unit(Resource):
         if (infos['Type'] == 'CREATE'):
             if(db.session.query(Birim).filter(Birim.BirimKodu==infos['BirimKodu']).count()!=0):
                 return "SAME BIRIMKODU"
-            elif(infos['ÜstBirimKodu'] != "NULL" and db.session.query(Birim).filter(Birim.ÜstBirimKodu==infos['ÜstBirimKodu']).count()==0):
+            elif(infos['ÜstBirimKodu'] != "NULL" and db.session.query(Birim).filter(Birim.BirimKodu==infos['ÜstBirimKodu']).count()==0):
                 return "NO USTBIRIMKODU"
             elif(db.session.query(İlçe).filter(İlçe.İlKodu==infos['İlKodu'], İlçe.İlçeKodu==infos['İlçeKodu']).count()==0):
                 return "NO ILKODU-ILCEKODU"
@@ -744,7 +967,7 @@ class Unit(Resource):
         changed = str(infos['EskiBirimKodu']) != infos['BirimKodu']
         if(changed and db.session.query(Birim).filter(Birim.BirimKodu==infos['BirimKodu']).count() != 0):
             return "SAME BIRIMKODU"
-        elif(db.session.query(Birim).filter(Birim.ÜstBirimKodu==infos['ÜstBirimKodu']).count()==0):
+        elif(db.session.query(Birim).filter(Birim.BirimKodu==infos['ÜstBirimKodu']).count()==0):
             return "NO USTBIRIMKODU"
         elif(db.session.query(İlçe).filter(İlçe.İlKodu==infos['İlKodu'], İlçe.İlçeKodu==infos['İlçeKodu']).count()==0):
             return "NO ILKODU-ILCEKODU"
@@ -765,8 +988,9 @@ class Unit(Resource):
     def delete(self):
         infos = request.json
         person = Birim.query.filter_by(BirimKodu=infos['BirimKodu'])
-        person.delete()
-        db.session.commit()
+        if(person.BirimKodu != 0):
+            person.delete()
+            db.session.commit()
         return "OK"
 
 api.add_resource(Unit,'/admin/unit')
@@ -824,6 +1048,7 @@ class ProblemAPI(Resource):
                 'ToplamKayıt' : count
             }
             send_users.append(record)
+            print(send_users)
             return send_users
     def put(self):
         infos = request.json
@@ -987,9 +1212,17 @@ class Intervention(Resource):
         if (infos['Type'] == 'CREATE'):
             if(db.session.query(Alan).filter(Alan.AlanID==infos['AlanID']).count() == 0):
                 return "NO ALANID"
-            elif(db.session.query(Sınıf).filter(Sınıf.SınıfID==infos['SınıfID']).count() == 0):
+            else:
+                alan = Alan.query.filter(Alan.AlanID==infos['AlanID']).first()
+                if(alan.AlanTipi != 0):
+                    return "NO ALANID"
+            if(db.session.query(Sınıf).filter(Sınıf.SınıfID==infos['SınıfID']).count() == 0):
                 return "NO SINIFID"
-            elif(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() != 0):
+            else:
+                sınıf = Sınıf.query.filter(Sınıf.SınıfID==infos['SınıfID']).first()
+                if(sınıf.SınıfTipi != 0):
+                    return "NO SINIFID"
+            if(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() != 0):
                 return "SAME RECORD"
             else:
                 new_record = Müdahale(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], MüdahaleID=infos['MüdahaleID'], MüdahaleAdı=infos['MüdahaleAdı'])
@@ -1061,9 +1294,17 @@ class Output(Resource):
         if (infos['Type'] == 'CREATE'):
             if(db.session.query(Alan).filter(Alan.AlanID==infos['AlanID']).count() == 0):
                 return "NO ALANID"
-            elif(db.session.query(Sınıf).filter(Sınıf.SınıfID==infos['SınıfID']).count() == 0):
+            else:
+                alan = Alan.query.filter(Alan.AlanID==infos['AlanID']).first()
+                if(alan.AlanTipi != 1):
+                    return "NO ALANID"
+            if(db.session.query(Sınıf).filter(Sınıf.SınıfID==infos['SınıfID']).count() == 0):
                 return "NO SINIFID"
-            elif(db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() != 0):
+            else:
+                sınıf = Sınıf.query.filter(Sınıf.SınıfID==infos['SınıfID']).first()
+                if(sınıf.SınıfTipi != 1):
+                    return "NO SINIFID"
+            if(db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() != 0):
                 return "SAME RECORD"
             else:
                 new_record = Çıktı(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], ÇıktıID=infos['ÇıktıID'], ÇıktıAdı=infos['ÇıktıAdı'])
@@ -1329,10 +1570,841 @@ class ProblemUnit(Resource):
 
 api.add_resource(ProblemUnit,'/personel/problemunit')
 
+
+class InterventionDetail(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+                return "NO MÜDAHALE RECORD"
+            elif(db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+                return "NO AKTİVİTE RECORD"
+            else:
+                new_record = MüdahaleDetay(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], MüdahaleID=infos['MüdahaleID'], AktiviteID=infos['AktiviteID'], Sıra=infos['Sıra'])
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            MüdahaleID = ''.join(infos['MüdahaleID'])
+            AktiviteID = ''.join(infos['AktiviteID'])
+            Sıra = ''.join(infos['Sıra'])
+            page = infos['Sayfa']
+            user_list = db.session.query(MüdahaleDetay)
+            if(AlanID != ''):
+                user_list = user_list.filter(MüdahaleDetay.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(MüdahaleDetay.SınıfID==SınıfID)
+            if(MüdahaleID != ''):
+                user_list = user_list.filter(MüdahaleDetay.MüdahaleID==MüdahaleID)
+            if(AktiviteID != ''):
+                user_list = user_list.filter(MüdahaleDetay.AktiviteID==AktiviteID)
+            if(Sıra != ''):
+                user_list = user_list.filter(MüdahaleDetay.Sıra==Sıra)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiMüdahaleID'] != infos['MüdahaleID']
+        changed4 = infos['EskiAktiviteID'] != infos['AktiviteID']
+        changed123 = changed1 or changed2 or changed3
+        if(changed123 and db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+            return "NO MÜDAHALE RECORD"
+        elif(changed4 and db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+            return "NO AKTİVİTE RECORD"
+        else:
+            record = MüdahaleDetay.query.filter(MüdahaleDetay.AlanID==infos['EskiAlanID'],MüdahaleDetay.SınıfID==infos['EskiSınıfID'], MüdahaleDetay.MüdahaleID==infos['EskiMüdahaleID'], MüdahaleDetay.AktiviteID==infos['EskiAktiviteID']).first()
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.MüdahaleID = infos['MüdahaleID'] 
+            record.AktiviteID = infos['AktiviteID'] 
+            record.Sıra = infos['Sıra'] 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = MüdahaleDetay.query.filter(MüdahaleDetay.AlanID==infos['AlanID'],MüdahaleDetay.SınıfID==infos['SınıfID'], MüdahaleDetay.MüdahaleID==infos['MüdahaleID'], MüdahaleDetay.AktiviteID==infos['AktiviteID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(InterventionDetail,'/admin/intervention-detail')
+
+
+class OutputDetail(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() == 0):
+                return "NO ÇIKTI RECORD"
+            elif(db.session.query(Belirteç).filter(Belirteç.BelirteçID==infos['BelirteçID']).count() == 0):
+                return "NO BELİRTEÇ RECORD"
+            else:
+                new_record = ÇıktıDetay(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], ÇıktıID=infos['ÇıktıID'], BelirteçID=infos['BelirteçID'], Sıra=infos['Sıra'])
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            ÇıktıID = ''.join(infos['ÇıktıID'])
+            BelirteçID = ''.join(infos['BelirteçID'])
+            Sıra = ''.join(infos['Sıra'])
+            page = infos['Sayfa']
+            user_list = db.session.query(ÇıktıDetay)
+            if(AlanID != ''):
+                user_list = user_list.filter(ÇıktıDetay.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(ÇıktıDetay.SınıfID==SınıfID)
+            if(ÇıktıID != ''):
+                user_list = user_list.filter(ÇıktıDetay.ÇıktıID==ÇıktıID)
+            if(BelirteçID != ''):
+                user_list = user_list.filter(ÇıktıDetay.BelirteçID==BelirteçID)
+            if(Sıra != ''):
+                user_list = user_list.filter(ÇıktıDetay.Sıra==Sıra)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiÇıktıID'] != infos['ÇıktıID']
+        changed4 = infos['EskiBelirteçID'] != infos['BelirteçID']
+        changed123 = changed1 or changed2 or changed3
+        if(changed123 and db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['MüdahaleID']).count() == 0):
+            return "NO ÇIKTI RECORD"
+        elif(changed4 and db.session.query(Belirteç).filter(Belirteç.BelirteçID==infos['AktiviteID']).count() == 0):
+            return "NO BELİRTEÇ RECORD"
+        else:
+            record = ÇıktıDetay.query.filter(ÇıktıDetay.AlanID==infos['EskiAlanID'],ÇıktıDetay.SınıfID==infos['EskiSınıfID'], ÇıktıDetay.ÇıktıID==infos['EskiÇıktıID'], ÇıktıDetay.BelirteçID==infos['EskiBelirteçID']).first()
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.ÇıktıID = infos['ÇıktıID'] 
+            record.BelirteçID = infos['BelirteçID'] 
+            record.Sıra = infos['Sıra'] 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = ÇıktıDetay.query.filter(ÇıktıDetay.AlanID==infos['AlanID'],ÇıktıDetay.SınıfID==infos['SınıfID'], ÇıktıDetay.ÇıktıID==infos['ÇıktıID'], ÇıktıDetay.BelirteçID==infos['BelirteçID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+
+api.add_resource(OutputDetail,'/admin/output-detail')
+
+
+class ProblemIntervention(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+                return "NO MÜDAHALE RECORD"
+            elif(db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+                return "NO PROBLEM RECORD"
+            else:
+                new_record = ProblemMüdahale(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], MüdahaleID=infos['MüdahaleID'], ProblemID=infos['ProblemID'])
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            MüdahaleID = ''.join(infos['MüdahaleID'])
+            ProblemID = ''.join(infos['ProblemID'])
+            page = infos['Sayfa']
+            user_list = db.session.query(ProblemMüdahale)
+            if(AlanID != ''):
+                user_list = user_list.filter(ProblemMüdahale.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(ProblemMüdahale.SınıfID==SınıfID)
+            if(MüdahaleID != ''):
+                user_list = user_list.filter(ProblemMüdahale.MüdahaleID==MüdahaleID)
+            if(ProblemID != ''):
+                user_list = user_list.filter(ProblemMüdahale.ProblemID==ProblemID)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiMüdahaleID'] != infos['MüdahaleID']
+        changed4 = infos['EskiProblemID'] != infos['ProblemID']
+        changed123 = changed1 or changed2 or changed3
+        if(changed123 and db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+            return "NO MÜDAHALE RECORD"
+        elif(changed4 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEM RECORD"
+        else:
+            record = ProblemMüdahale.query.filter(ProblemMüdahale.AlanID==infos['EskiAlanID'],ProblemMüdahale.SınıfID==infos['EskiSınıfID'], ProblemMüdahale.MüdahaleID==infos['EskiMüdahaleID'], ProblemMüdahale.ProblemID==infos['EskiProblemID']).first()
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.MüdahaleID = infos['MüdahaleID'] 
+            record.ProblemID = infos['ProblemID'] 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = ProblemMüdahale.query.filter(ProblemMüdahale.AlanID==infos['AlanID'],ProblemMüdahale.SınıfID==infos['SınıfID'], ProblemMüdahale.MüdahaleID==infos['MüdahaleID'], ProblemMüdahale.ProblemID==infos['ProblemID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(ProblemIntervention,'/personel/problem-intervention')
+
+
+class ProblemOutput(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() == 0):
+                return "NO ÇIKTI RECORD"
+            elif(db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+                return "NO PROBLEM RECORD"
+            else:
+                new_record = ProblemÇıktı(AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], ÇıktıID=infos['ÇıktıID'], ProblemID=infos['ProblemID'])
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            ÇıktıID = ''.join(infos['ÇıktıID'])
+            ProblemID = ''.join(infos['ProblemID'])
+            page = infos['Sayfa']
+            user_list = db.session.query(ProblemÇıktı)
+            if(AlanID != ''):
+                user_list = user_list.filter(ProblemÇıktı.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(ProblemÇıktı.SınıfID==SınıfID)
+            if(ÇıktıID != ''):
+                user_list = user_list.filter(ProblemÇıktı.ÇıktıID==ÇıktıID)
+            if(ProblemID != ''):
+                user_list = user_list.filter(ProblemÇıktı.ProblemID==ProblemID)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiÇıktıID'] != infos['ÇıktıID']
+        changed4 = infos['EskiProblemID'] != infos['ProblemID']
+        changed123 = changed1 or changed2 or changed3
+        if(changed123 and db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() == 0):
+            return "NO ÇIKTI RECORD"
+        elif(changed4 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEM RECORD"
+        else:
+            record = ProblemÇıktı.query.filter(ProblemÇıktı.AlanID==infos['EskiAlanID'],ProblemÇıktı.SınıfID==infos['EskiSınıfID'], ProblemÇıktı.ÇıktıID==infos['EskiÇıktıID'], ProblemÇıktı.ProblemID==infos['EskiProblemID']).first()
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.ÇıktıID = infos['ÇıktıID'] 
+            record.ProblemID = infos['ProblemID'] 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = ProblemÇıktı.query.filter(ProblemÇıktı.AlanID==infos['AlanID'],ProblemÇıktı.SınıfID==infos['SınıfID'], ProblemÇıktı.ÇıktıID==infos['ÇıktıID'], ProblemÇıktı.ProblemID==infos['ProblemID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(ProblemOutput,'/personel/problem-output')
+
+
+class ExtraInterventionDetail(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+                return "NO PROBLEM"
+            elif(db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['EkleyenKullanıcıAdı']).count() == 0):
+                return "NO KULLANICIADI"
+            elif(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+                return "NO MÜDAHALE RECORD"
+            elif(db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+                return "NO AKTİVİTE RECORD"
+            else:
+                datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+                new_record = İlaveMüdahaleDetay(ProblemID=infos['ProblemID'],AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], MüdahaleID=infos['MüdahaleID'], AktiviteID=infos['AktiviteID'], Sıra=infos['Sıra'], EkleyenKullanıcıAdı=infos['EkleyenKullanıcıAdı'], EklenmeTarihi=datetime_obj)
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            MüdahaleID = ''.join(infos['MüdahaleID'])
+            AktiviteID = ''.join(infos['AktiviteID'])
+            Sıra = ''.join(infos['Sıra'])
+            EkleyenKullanıcıAdı = infos['EkleyenKullanıcıAdı']
+            EklenmeTarihi = infos['EklenmeTarihi']
+            if(EklenmeTarihi != ''):
+                datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+            page = infos['Sayfa']
+            user_list = db.session.query(İlaveMüdahaleDetay)
+            if(ProblemID != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.ProblemID==ProblemID)
+            if(AlanID != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.SınıfID==SınıfID)
+            if(MüdahaleID != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.MüdahaleID==MüdahaleID)
+            if(AktiviteID != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.AktiviteID==AktiviteID)
+            if(Sıra != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.Sıra==Sıra)
+            if(EkleyenKullanıcıAdı != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.EkleyenKullanıcıAdı==EkleyenKullanıcıAdı)
+            if(EklenmeTarihi != ''):
+                user_list = user_list.filter(İlaveMüdahaleDetay.EklenmeTarihi==datetime_obj)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                user_dict['EklenmeTarihi'] = user_dict['EklenmeTarihi'].strftime('%Y-%m-%d')
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed0 = infos['EskiProblemID'] != infos['ProblemID']
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiMüdahaleID'] != infos['MüdahaleID']
+        changed4 = infos['EskiAktiviteID'] != infos['AktiviteID']
+        changed5 = infos['EskiEkleyenKullanıcıAdı'] != infos['EkleyenKullanıcıAdı']
+        changed123 = changed1 or changed2 or changed3
+        if(changed0 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEM"
+        elif(changed5 and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['EkleyenKullanıcıAdı']).count() == 0):
+            return "NO KULLANICIADI"
+        elif(changed123 and db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+            return "NO MÜDAHALE RECORD"
+        elif(changed4 and db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+            return "NO AKTİVİTE RECORD"
+        else:
+            datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+            record = İlaveMüdahaleDetay.query.filter(İlaveMüdahaleDetay.ProblemID==infos['EskiProblemID'], İlaveMüdahaleDetay.AlanID==infos['EskiAlanID'],İlaveMüdahaleDetay.SınıfID==infos['EskiSınıfID'], İlaveMüdahaleDetay.MüdahaleID==infos['EskiMüdahaleID'], İlaveMüdahaleDetay.AktiviteID==infos['EskiAktiviteID']).first()
+            record.ProblemID = infos['ProblemID']
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.MüdahaleID = infos['MüdahaleID'] 
+            record.AktiviteID = infos['AktiviteID'] 
+            record.Sıra = infos['Sıra'] 
+            record.EkleyenKullanıcıAdı = infos['EkleyenKullanıcıAdı'] 
+            record.EklenmeTarihi = datetime_obj 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = İlaveMüdahaleDetay.query.filter(İlaveMüdahaleDetay.ProblemID==infos['ProblemID'], İlaveMüdahaleDetay.AlanID==infos['AlanID'],İlaveMüdahaleDetay.SınıfID==infos['SınıfID'], İlaveMüdahaleDetay.MüdahaleID==infos['MüdahaleID'], İlaveMüdahaleDetay.AktiviteID==infos['AktiviteID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(ExtraInterventionDetail,'/personel/extra-intervention-detail')
+
+
+class ExtraOutputDetail(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+                return "NO PROBLEM"
+            elif(db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['EkleyenKullanıcıAdı']).count() == 0):
+                return "NO KULLANICIADI"
+            elif(db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() == 0):
+                return "NO ÇIKTI RECORD"
+            elif(db.session.query(Belirteç).filter(Belirteç.BelirteçID==infos['BelirteçID']).count() == 0):
+                return "NO BELİRTEÇ RECORD"
+            else:
+                datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+                new_record = İlaveÇıktıDetay(ProblemID=infos['ProblemID'],AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], ÇıktıID=infos['ÇıktıID'], BelirteçID=infos['BelirteçID'], Sıra=infos['Sıra'], EkleyenKullanıcıAdı=infos['EkleyenKullanıcıAdı'], EklenmeTarihi=datetime_obj)
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            ÇıktıID = ''.join(infos['ÇıktıID'])
+            BelirteçID = ''.join(infos['BelirteçID'])
+            Sıra = ''.join(infos['Sıra'])
+            EkleyenKullanıcıAdı = infos['EkleyenKullanıcıAdı']
+            EklenmeTarihi = infos['EklenmeTarihi']
+            if(EklenmeTarihi != ''):
+                datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+            page = infos['Sayfa']
+            user_list = db.session.query(İlaveÇıktıDetay)
+            if(ProblemID != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.ProblemID==ProblemID)
+            if(AlanID != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.SınıfID==SınıfID)
+            if(ÇıktıID != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.ÇıktıID==ÇıktıID)
+            if(BelirteçID != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.BelirteçID==BelirteçID)
+            if(Sıra != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.Sıra==Sıra)
+            if(EkleyenKullanıcıAdı != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.EkleyenKullanıcıAdı==EkleyenKullanıcıAdı)
+            if(EklenmeTarihi != ''):
+                user_list = user_list.filter(İlaveÇıktıDetay.EklenmeTarihi==datetime_obj)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                user_dict['EklenmeTarihi'] = user_dict['EklenmeTarihi'].strftime('%Y-%m-%d')
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed0 = infos['EskiProblemID'] != infos['ProblemID']
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiÇıktıID'] != infos['ÇıktıID']
+        changed4 = infos['EskiBelirteçID'] != infos['BelirteçID']
+        changed5 = infos['EskiEkleyenKullanıcıAdı'] != infos['EkleyenKullanıcıAdı']
+        changed123 = changed1 or changed2 or changed3
+        if(changed0 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEM"
+        elif(changed5 and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['EkleyenKullanıcıAdı']).count() == 0):
+            return "NO KULLANICIADI"
+        elif(changed123 and db.session.query(Çıktı).filter(Çıktı.AlanID==infos['AlanID'], Çıktı.SınıfID==infos['SınıfID'], Çıktı.ÇıktıID==infos['ÇıktıID']).count() == 0):
+            return "NO ÇIKTI RECORD"
+        elif(changed4 and db.session.query(Belirteç).filter(Belirteç.BelirteçID==infos['BelirteçID']).count() == 0):
+            return "NO BELİRTEÇ RECORD"
+        else:
+            datetime_obj = datetime.strptime(infos['EklenmeTarihi'], '%Y-%m-%d')
+            record = İlaveÇıktıDetay.query.filter(İlaveÇıktıDetay.ProblemID==infos['EskiProblemID'], İlaveÇıktıDetay.AlanID==infos['EskiAlanID'],İlaveÇıktıDetay.SınıfID==infos['EskiSınıfID'], İlaveÇıktıDetay.ÇıktıID==infos['EskiÇıktıID'], İlaveÇıktıDetay.BelirteçID==infos['EskiBelirteçID']).first()
+            record.ProblemID = infos['ProblemID']
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.ÇıktıID = infos['ÇıktıID'] 
+            record.BelirteçID = infos['BelirteçID'] 
+            record.Sıra = infos['Sıra'] 
+            record.EkleyenKullanıcıAdı = infos['EkleyenKullanıcıAdı'] 
+            record.EklenmeTarihi = datetime_obj 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = İlaveÇıktıDetay.query.filter(İlaveÇıktıDetay.ProblemID==infos['ProblemID'], İlaveÇıktıDetay.AlanID==infos['AlanID'],İlaveÇıktıDetay.SınıfID==infos['SınıfID'], İlaveÇıktıDetay.ÇıktıID==infos['ÇıktıID'], İlaveÇıktıDetay.BelirteçID==infos['BelirteçID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(ExtraOutputDetail,'/personel/extra-output-detail')
+
+
+class PersonelProblemAPI(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Problem).filter_by(ProblemTipiID=infos['ProblemID']).count() == 0):
+                return "NO PROBLEMID"
+            elif(db.session.query(Personel).filter_by(KullanıcıAdı=infos['KullanıcıAdı']).count() == 0):
+                return "NO KULLANICIADI"
+            else:
+                new_record = PersonelProblem(ProblemID=infos['ProblemID'], KullanıcıAdı=infos['KullanıcıAdı'])
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            KullanıcıAdı = infos['KullanıcıAdı']
+            page = infos['Sayfa']
+            if(ProblemID != '' and KullanıcıAdı != ''):
+                user_list = PersonelProblem.query.filter(PersonelProblem.ProblemID==ProblemID,PersonelProblem.KullanıcıAdı==KullanıcıAdı).all()[::-1]
+            elif(ProblemID != ''):
+                user_list = PersonelProblem.query.filter_by(ProblemID=ProblemID).all()[::-1]
+            elif(KullanıcıAdı != ''):
+                user_list = PersonelProblem.query.filter_by(KullanıcıAdı=KullanıcıAdı).all()[::-1]
+            else:
+                user_list = PersonelProblem.query.all()[::-1]
+            send_users = []
+            count = 0
+            for the_user in user_list:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                send_users.append(user_dict)
+                count += 1
+            send_users = send_users[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_users.append(record)
+            return send_users
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiProblemID'] != infos['ProblemID']
+        changed2 = infos['EskiKullanıcıAdı'] != infos['KullanıcıAdı']
+        if(changed1 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEMID"
+        elif(changed2 and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['KullanıcıAdı']).count() == 0):
+            return "NO KULLANICIADI"
+        else:
+            record = PersonelProblem.query.filter_by(ProblemID=infos['EskiProblemID'], KullanıcıAdı=infos['EskiKullanıcıAdı']).first()
+            record.ProblemID = infos['ProblemID']
+            record.KullanıcıAdı = infos['KullanıcıAdı'] 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = PersonelProblem.query.filter_by(ProblemID=infos['ProblemID'], KullanıcıAdı=infos['KullanıcıAdı'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(PersonelProblemAPI,'/personel/personel-problem')
+
+
+class ProblemOutputEvaluation(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Problem).filter_by(ProblemTipiID=infos['ProblemID']).count() == 0):
+                return "NO PROBLEMID"
+            elif(db.session.query(Belirteç).filter_by(BelirteçID=infos['BelirteçID']).count() == 0):
+                return "NO BELİRTEÇID"
+            else:
+                datetime_obj = datetime.strptime(infos['SkorTarihi'], '%Y-%m-%d')
+                new_record = ProblemÇıktıDeğerlendirme(ProblemID=infos['ProblemID'], BelirteçID=infos['BelirteçID'], Skor=infos['Skor'], SkorTarihi=datetime_obj)
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            BelirteçID = ''.join(infos['BelirteçID'])
+            Skor = ''.join(infos['Skor'])
+            SkorTarihi = infos['SkorTarihi']
+            if(SkorTarihi != ''):
+                datetime_obj = datetime.strptime(infos['SkorTarihi'], '%Y-%m-%d')
+            page = infos['Sayfa']
+            user_list = db.session.query(ProblemÇıktıDeğerlendirme)
+            if(ProblemID != ''):
+                user_list = user_list.filter(ProblemÇıktıDeğerlendirme.ProblemID==ProblemID)
+            if(BelirteçID != ''):
+                user_list = user_list.filter(ProblemÇıktıDeğerlendirme.BelirteçID==BelirteçID)
+            if(Skor != ''):
+                user_list = user_list.filter(ProblemÇıktıDeğerlendirme.Skor==Skor)
+            if(SkorTarihi != ''):
+                user_list = user_list.filter(ProblemÇıktıDeğerlendirme.SkorTarihi==datetime_obj)
+            send_users = []
+            count = 0
+            for the_user in user_list:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                user_dict['SkorTarihi'] = user_dict['SkorTarihi'].strftime('%Y-%m-%d')
+                send_users.append(user_dict)
+                count += 1
+            send_users = send_users[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_users.append(record)
+            return send_users
+        
+    def put(self):
+        infos = request.json
+        changed1 = infos['EskiProblemID'] != infos['ProblemID']
+        changed2 = infos['EskiBelirteçID'] != infos['BelirteçID']
+        if(changed1 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEMID"
+        elif(changed2 and db.session.query(Belirteç).filter(Belirteç.BelirteçID==infos['BelirteçID']).count() == 0):
+            return "NO BELİRTEÇID"
+        else:
+            datetime_obj = datetime.strptime(infos['SkorTarihi'], '%Y-%m-%d')
+            record = ProblemÇıktıDeğerlendirme.query.filter_by(ProblemID=infos['EskiProblemID'], BelirteçID=infos['BelirteçID']).first()
+            record.ProblemID = infos['ProblemID']
+            record.BelirteçID = infos['BelirteçID'] 
+            record.Skor = infos['Skor'] 
+            record.SkorTarihi =  datetime_obj
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = ProblemÇıktıDeğerlendirme.query.filter_by(ProblemID=infos['ProblemID'], BelirteçID=infos['BelirteçID'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(ProblemOutputEvaluation,'/personel/problemoutput-evaluation')
+
+
+class EmployeeProblem(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if (infos['Type'] == 'CREATE'):
+            if(db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+                return "NO PROBLEM"
+            elif(db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['KullanıcıAdı']).count() == 0):
+                return "NO KULLANICIADI"
+            elif(db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+                return "NO MÜDAHALE RECORD"
+            elif(db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+                return "NO AKTİVİTE RECORD"
+            else:
+                datetime_obj = datetime.strptime(infos['Tarihi'], '%Y-%m-%d')
+                new_record = ÇalışanProblem(ProblemID=infos['ProblemID'],AlanID=infos['AlanID'], SınıfID=infos['SınıfID'], MüdahaleID=infos['MüdahaleID'], AktiviteID=infos['AktiviteID'], KullanıcıAdı=infos['KullanıcıAdı'], AktiviteAçıklama=infos['AktiviteAçıklama'], Tarihi=datetime_obj)
+                db.session.add(new_record)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            AlanID = ''.join(infos['AlanID'])
+            SınıfID = ''.join(infos['SınıfID'])
+            MüdahaleID = ''.join(infos['MüdahaleID'])
+            AktiviteID = ''.join(infos['AktiviteID'])
+            AktiviteAçıklama = infos['AktiviteAçıklama']
+            KullanıcıAdı = infos['KullanıcıAdı']
+            Tarihi = infos['Tarihi']
+            if(Tarihi != ''):
+                datetime_obj = datetime.strptime(infos['Tarihi'], '%Y-%m-%d')
+            page = infos['Sayfa']
+            user_list = db.session.query(ÇalışanProblem)
+            if(ProblemID != ''):
+                user_list = user_list.filter(ÇalışanProblem.ProblemID==ProblemID)
+            if(AlanID != ''):
+                user_list = user_list.filter(ÇalışanProblem.AlanID==AlanID)
+            if(SınıfID != ''):
+                user_list = user_list.filter(ÇalışanProblem.SınıfID==SınıfID)
+            if(MüdahaleID != ''):
+                user_list = user_list.filter(ÇalışanProblem.MüdahaleID==MüdahaleID)
+            if(AktiviteID != ''):
+                user_list = user_list.filter(ÇalışanProblem.AktiviteID==AktiviteID)
+            if(AktiviteAçıklama != ''):
+                user_list = user_list.filter(ÇalışanProblem.AktiviteAçıklama==AktiviteAçıklama)
+            if(KullanıcıAdı != ''):
+                user_list = user_list.filter(ÇalışanProblem.KullanıcıAdı==KullanıcıAdı)
+            if(Tarihi != ''):
+                user_list = user_list.filter(ÇalışanProblem.Tarihi==datetime_obj)
+            send_records = []
+            count = 0
+            for the_user in user_list[::-1]:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                user_dict['Tarihi'] = user_dict['Tarihi'].strftime('%Y-%m-%d')
+                send_records.append(user_dict)
+                count += 1
+            send_records = send_records[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_records.append(record)
+            return send_records
+        
+    def put(self):
+        infos = request.json
+        changed0 = infos['EskiProblemID'] != infos['ProblemID']
+        changed1 = infos['EskiAlanID'] != infos['AlanID']  
+        changed2 = infos['EskiSınıfID'] != infos['SınıfID']
+        changed3 = infos['EskiMüdahaleID'] != infos['MüdahaleID']
+        changed4 = infos['EskiAktiviteID'] != infos['AktiviteID']
+        changed5 = infos['EskiKullanıcıAdı'] != infos['KullanıcıAdı']
+        changed123 = changed1 or changed2 or changed3
+        if(changed0 and db.session.query(Problem).filter(Problem.ProblemTipiID==infos['ProblemID']).count() == 0):
+            return "NO PROBLEM"
+        elif(changed5 and db.session.query(Personel).filter(Personel.KullanıcıAdı==infos['KullanıcıAdı']).count() == 0):
+            return "NO KULLANICIADI"
+        elif(changed123 and db.session.query(Müdahale).filter(Müdahale.AlanID==infos['AlanID'], Müdahale.SınıfID==infos['SınıfID'], Müdahale.MüdahaleID==infos['MüdahaleID']).count() == 0):
+            return "NO MÜDAHALE RECORD"
+        elif(changed4 and db.session.query(Aktivite).filter(Aktivite.AktiviteID==infos['AktiviteID']).count() == 0):
+            return "NO AKTİVİTE RECORD"
+        else:
+            datetime_obj = datetime.strptime(infos['Tarihi'], '%Y-%m-%d')
+            record = ÇalışanProblem.query.filter(ÇalışanProblem.ProblemID==infos['EskiProblemID'], ÇalışanProblem.KullanıcıAdı==infos['EskiKullanıcıAdı']).first()
+            record.ProblemID = infos['ProblemID']
+            record.AlanID = infos['AlanID']
+            record.SınıfID = infos['SınıfID']
+            record.MüdahaleID = infos['MüdahaleID'] 
+            record.AktiviteID = infos['AktiviteID'] 
+            record.AktiviteAçıklama = infos['AktiviteAçıklama'] 
+            record.KullanıcıAdı = infos['KullanıcıAdı'] 
+            record.Tarihi = datetime_obj 
+            db.session.commit()
+            return "OK"
+    def delete(self):
+        infos = request.json
+        record = ÇalışanProblem.query.filter(ÇalışanProblem.ProblemID==infos['ProblemID'], ÇalışanProblem.KullanıcıAdı==infos['KullanıcıAdı'])
+        record.delete()
+        db.session.commit()
+        return "OK"
+
+api.add_resource(EmployeeProblem,'/personel/employee-problem')
+
+
+class ProblemCaseEvaluation(Resource):
+    def post(self):
+        infos = request.json
+        print(infos)
+        if(infos['Type'] == 'GET-SCORE'):
+            if(db.session.query(ProblemÇıktıDeğerlendirme).filter_by(ProblemID=infos['ProblemID']).count() != 0):
+                the_problem = ProblemÇıktıDeğerlendirme.query.filter(ProblemÇıktıDeğerlendirme.ProblemID==infos['ProblemID']).first()
+                önceki_problem_skoru = the_problem.Skor
+                send_data = {
+                    'ÖncekiProblemSkoru' : önceki_problem_skoru
+                }
+                return send_data
+            else:
+                return {
+                    'ÖncekiProblemSkoru' : ''
+                }
+        elif (infos['Type'] == 'CREATE'):
+            if(db.session.query(ProblemÇıktıDeğerlendirme).filter_by(ProblemID=infos['ProblemID']).count() == 0):
+                return "NO PROBLEM"
+            elif(db.session.query(Personel).filter_by(KullanıcıAdı=infos['DeğerlendirenKullanıcıAdı']).count() == 0):
+                return "NO KULLANICIADI"
+            elif(db.session.query(Problem).filter_by(ProblemTipiID=infos['YeniProblemID']).count() != 0):
+                return "YES PROBLEM"
+            else:
+                datetime_obj = datetime.strptime(infos['DeğerlendirmeTarihi'], '%Y-%m-%d')
+                the_problem = ProblemÇıktıDeğerlendirme.query.filter(ProblemÇıktıDeğerlendirme.ProblemID==infos['ProblemID']).first() 
+                önceki_problem_skoru = the_problem.Skor
+                new_record = ProblemDurumDeğerlendirme(ProblemID=infos['ProblemID'],YeniProblemID=infos['YeniProblemID'],YeniProblemTanımı=infos['YeniProblemTanımı'],YeniHedef=infos['YeniHedef'],ÖncekiProblemSkoru=önceki_problem_skoru,TahminEdilenProblemSkoru=infos['TahminEdilenProblemSkoru'],DeğerlendirmeTarihi=datetime_obj,DeğerlendirenKullanıcıAdı=infos['DeğerlendirenKullanıcıAdı'])
+                db.session.add(new_record)
+                problem = Problem.query.filter(Problem.ProblemTipiID==infos['ProblemID']).first()
+                print("****************")
+                print(problem.ProblemTipiID)
+                problem.ProblemTipiID = infos['YeniProblemID']
+                problem.ProblemTanımı = infos['YeniProblemTanımı']
+                problem.HedeflenenAmaçTanımı = infos['YeniHedef']
+                print(problem.ProblemTipiID)
+                db.session.commit()
+                return "OK"
+        else:
+            ProblemID = ''.join(infos['ProblemID'])
+            YeniProblemID = ''.join(infos['YeniProblemID'])
+            YeniProblemTanımı = infos['YeniProblemTanımı']
+            YeniHedef = infos['YeniHedef']
+            ÖncekiProblemSkoru = ''.join(infos['ÖncekiProblemSkoru'])
+            TahminEdilenProblemSkoru = ''.join(infos['TahminEdilenProblemSkoru'])
+            DeğerlendirmeTarihi = infos['DeğerlendirmeTarihi']
+            if(DeğerlendirmeTarihi != ''):
+                datetime_obj = datetime.strptime(infos['DeğerlendirmeTarihi'], '%Y-%m-%d')
+            DeğerlendirenKullanıcıAdı = infos['DeğerlendirenKullanıcıAdı']
+            page = infos['Sayfa']
+            user_list = db.session.query(ProblemDurumDeğerlendirme)
+            if(ProblemID != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.ProblemID==ProblemID)
+            if(YeniProblemID != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.YeniProblemID==YeniProblemID)
+            if(YeniProblemTanımı != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.YeniProblemTanımı==YeniProblemTanımı)
+            if(YeniHedef != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.YeniHedef==YeniHedef)
+            if(ÖncekiProblemSkoru != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.ÖncekiProblemSkoru==ÖncekiProblemSkoru)
+            if(TahminEdilenProblemSkoru != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.TahminEdilenProblemSkoru==TahminEdilenProblemSkoru)
+            if(DeğerlendirmeTarihi != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.DeğerlendirmeTarihi==datetime_obj)
+            if(DeğerlendirenKullanıcıAdı != ''):
+                user_list = user_list.filter(ProblemDurumDeğerlendirme.DeğerlendirenKullanıcıAdı==DeğerlendirenKullanıcıAdı)
+            send_users = []
+            count = 0
+            for the_user in user_list:
+                user_dict = the_user.__dict__
+                del(user_dict['_sa_instance_state'])
+                user_dict['DeğerlendirmeTarihi'] = user_dict['DeğerlendirmeTarihi'].strftime('%Y-%m-%d')
+                send_users.append(user_dict)
+                count += 1
+            send_users = send_users[page*5-5:page*5]
+            record = {
+                'ToplamKayıt' : count
+            }
+            send_users.append(record)
+            return send_users
+
+api.add_resource(ProblemCaseEvaluation,'/personel/problem-case-evaluation')
+
+
 @app.route('/logout', methods=["GET"])
 @login_required
 def logout():
     logout_user()
+    session.pop('Müdür', default=None)
     return redirect(url_for('login'))
 
 if __name__ == '__main__':

@@ -3,16 +3,19 @@ const sinif_form = document.getElementsByClassName('manage-sinif')[0]
 const cikti_form = document.getElementsByClassName('manage-cikti')[0]
 const belirtec_form = document.getElementsByClassName('manage-belirtec')[0]
 const problembirim = document.getElementsByClassName('manage-problembirim')[0]
-const problem = document.getElementsByClassName('manage-problem')[0]
 const previouspage_btn = document.getElementById("previouspage")
+const nextpage_btn = document.getElementById("nextpage")
 
-let müdür = false
 
 fetch('./isManager/').
 then(response => response.json()).
 then(data => {
+    console.log("isManager : "+data);
     if(data == "True"){
-        müdür = True
+        nextpage_btn.style.visibility = 'visible'
+        nextpage_btn.addEventListener("click", (e) => {
+            location.replace('./nextPage')
+        })
     }
 })
 
@@ -36,11 +39,3 @@ previouspage_btn.addEventListener('click', (e) => {
     location.replace('../logout')
 })
 
-if(müdür){
-    problem.addEventListener("click", (e) => {
-        location.replace('./problemform')
-    })
-}
-else {
-    problem.setAttribute("style", "display:none")
-}
