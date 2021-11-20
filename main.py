@@ -11,14 +11,14 @@ from cryptography.fernet import Fernet
 key = Fernet.generate_key()
 fernet = Fernet(key) 
 app = Flask(__name__)
-ENV = 'dev'
+ENV = 'prod'
 
 if(ENV == 'dev'):
     app.debug = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:kamil1789@localhost/COMPANY'
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://czldvzrfajlvsw:e4f5393569cbf42449154538c3784ba5654126ce57f99a6cf0fb2e3329e7218b@ec2-52-201-195-11.compute-1.amazonaws.com:5432/d9kk1fd0gghtj9'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://awfggiutadszpb:1dc7f0bb7f119cbaf4768ae424c0af83847405fc95d641ceec8cda1ccbdb3495@ec2-35-173-71-140.compute-1.amazonaws.com:5432/d74fghm2l2ku6j'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
