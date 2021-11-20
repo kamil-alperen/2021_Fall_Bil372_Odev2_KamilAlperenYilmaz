@@ -1,18 +1,18 @@
 Çalıştırmak için;
-<br/>    python main.py
+<br/>&emsp;    python main.py
 
 Var olan kullanıcı adı ve şifreleri;
-<br/>    Sistem Yöneticisi:
-<br/>       Kullanıcı Adı : SystemAdmin
-<br/>       Şifre : SystemAdmin_123
-<br/>    Müdür:
-<br/>       Kullanıcı Adı : KamilAlperen
-<br/>       Şifre : KamilAlperen_123
-<br/>    Normal Çalışan:
-<br/>        Kullanıcı Adı : AlperenYılmaz
-<br/>      Şifre : AlperenYılmaz_123
+<br/>&emsp;    Sistem Yöneticisi:
+<br/>&emsp;&emsp;       Kullanıcı Adı : SystemAdmin
+<br/>&emsp;&emsp;       Şifre : SystemAdmin_123
+<br/>&emsp;    Müdür:
+<br/>&emsp;&emsp;       Kullanıcı Adı : KamilAlperen
+<br/>&emsp;&emsp;       Şifre : KamilAlperen_123
+<br/>&emsp;    Normal Çalışan:
+<br/>&emsp;&emsp;       Kullanıcı Adı : AlperenYılmaz
+<br/>&emsp;&emsp;       Şifre : AlperenYılmaz_123
 
 Heroku'da görmek için;
-<br/>    https://company-homework.herokuapp.com/
+<br/>&emsp;    https://company-homework.herokuapp.com/
 
 Video;
