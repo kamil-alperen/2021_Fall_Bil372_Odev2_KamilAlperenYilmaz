@@ -16,3 +16,4 @@ Heroku'da görmek için;
 <br/>&emsp;    https://company-homework.herokuapp.com/
 
 Video;
+<br/>&emsp; https://youtu.be/z4Zjss8FPzo
