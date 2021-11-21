@@ -987,9 +987,9 @@ class Unit(Resource):
             return "OK"
     def delete(self):
         infos = request.json
-        person = Birim.query.filter_by(BirimKodu=infos['BirimKodu'])
-        if(person.BirimKodu != 0):
-            person.delete()
+        birim = Birim.query.filter_by(BirimKodu=infos['BirimKodu'])
+        if(infos['BirimKodu'] != 0):
+            birim.delete()
             db.session.commit()
         return "OK"
 
